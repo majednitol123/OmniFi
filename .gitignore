@@ -46,6 +46,7 @@ id.json
 coverage/
 .nyc_output/
 *.lcov
+ui-test-artifacts/
 
 # Build manifests
 build-manifest.sha256

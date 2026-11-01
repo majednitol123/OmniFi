@@ -27,7 +27,8 @@ export class OmniFiClient {
 
   constructor(config: OmniFiClientConfig) {
     this.baseUrl = config.baseUrl.replace(/\/$/, '');
-    this.fetchFn = config.fetchFn || globalThis.fetch;
+    const rawFetch = config.fetchFn || globalThis.fetch;
+    this.fetchFn = (input, init) => rawFetch(input, init);
   }
 
   public async getHealth(): Promise<HealthResponse> {
