@@ -22,6 +22,19 @@ export default function HistoryPage() {
     }
   };
 
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'finalized':
+        return <span className="badge badge-finalized font-mono">FINALIZED</span>;
+      case 'confirmed':
+        return <span className="badge badge-confirmed font-mono">CONFIRMED</span>;
+      case 'failed':
+        return <span className="badge badge-failed font-mono">FAILED</span>;
+      default:
+        return <span className="badge badge-submitted font-mono">SUBMITTED</span>;
+    }
+  };
+
   return (
     <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '2rem 1.5rem' }}>
       <div
@@ -35,16 +48,16 @@ export default function HistoryPage() {
         }}
       >
         <div>
-          <h1 style={{ fontSize: '1.75rem', fontWeight: 800, margin: '0 0 0.4rem 0' }}>
+          <h1 style={{ fontSize: '1.85rem', fontWeight: 800, margin: '0 0 0.4rem 0', letterSpacing: '-0.02em' }}>
             Transaction History
           </h1>
-          <p style={{ color: 'var(--text-secondary)', margin: 0, fontSize: '0.9rem' }}>
+          <p style={{ color: 'var(--text-secondary)', margin: 0, fontSize: '0.92rem' }}>
             Complete audit trail of user-signed on-chain transactions and their finality progression
           </p>
         </div>
 
         {history.length > 0 && (
-          <button onClick={handleClear} className="btn btn-secondary font-mono" style={{ fontSize: '0.8rem' }}>
+          <button onClick={handleClear} className="btn btn-secondary font-mono" style={{ fontSize: '0.8rem', padding: '0.45rem 0.9rem', borderRadius: '8px' }}>
             Clear Local Log
           </button>
         )}
@@ -67,7 +80,7 @@ export default function HistoryPage() {
             <tbody>
               {history.length === 0 ? (
                 <tr>
-                  <td colSpan={7} style={{ textAlign: 'center', padding: '3.5rem', color: 'var(--text-muted)' }}>
+                  <td colSpan={7} style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-muted)' }}>
                     No recorded transactions in this browser session. Execute a swap or provide liquidity to record on-chain activity.
                   </td>
                 </tr>
@@ -81,7 +94,7 @@ export default function HistoryPage() {
 
                   return (
                     <tr key={tx.id || tx.txHash}>
-                      <td className="font-mono" style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                      <td className="font-mono" style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
                         {date}
                       </td>
                       <td>
@@ -90,29 +103,15 @@ export default function HistoryPage() {
                         </span>
                       </td>
                       <td>
-                        <span className="badge badge-submitted font-mono" style={{ fontSize: '0.75rem' }}>
+                        <span className="badge badge-blue font-mono" style={{ fontSize: '0.75rem' }}>
                           {tx.networkId}
                         </span>
                       </td>
-                      <td style={{ fontWeight: 600, fontSize: '0.85rem' }}>{tx.summary}</td>
-                      <td className="font-mono" style={{ fontSize: '0.8rem' }}>
+                      <td style={{ fontWeight: 600, fontSize: '0.88rem' }}>{tx.summary}</td>
+                      <td className="font-mono" style={{ fontSize: '0.82rem' }}>
                         {tx.txHash.slice(0, 8)}...{tx.txHash.slice(-6)}
                       </td>
-                      <td>
-                        <span
-                          className={`badge ${
-                            tx.status === 'finalized'
-                              ? 'badge-finalized'
-                              : tx.status === 'confirmed'
-                              ? 'badge-confirmed'
-                              : tx.status === 'failed'
-                              ? 'badge-failed'
-                              : 'badge-submitted'
-                          }`}
-                        >
-                          {tx.status.toUpperCase()}
-                        </span>
-                      </td>
+                      <td>{getStatusBadge(tx.status)}</td>
                       <td style={{ textAlign: 'right' }}>
                         <a
                           href={tx.explorerUrl}
@@ -120,10 +119,11 @@ export default function HistoryPage() {
                           rel="noreferrer"
                           className="btn btn-secondary font-mono"
                           style={{
-                            padding: '0.3rem 0.6rem',
-                            fontSize: '0.75rem',
+                            padding: '0.35rem 0.75rem',
+                            fontSize: '0.78rem',
                             textDecoration: 'none',
                             color: 'var(--accent-cyber)',
+                            borderRadius: '6px',
                           }}
                         >
                           View ↗
@@ -140,4 +140,3 @@ export default function HistoryPage() {
     </div>
   );
 }
-

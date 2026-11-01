@@ -22,8 +22,8 @@ export function Header() {
     <header
       style={{
         borderBottom: '1px solid var(--border-subtle)',
-        background: 'rgba(9, 10, 15, 0.95)',
-        backdropFilter: 'blur(8px)',
+        background: 'rgba(6, 7, 10, 0.85)',
+        backdropFilter: 'blur(16px)',
         position: 'sticky',
         top: 0,
         zIndex: 50,
@@ -33,40 +33,41 @@ export function Header() {
         style={{
           maxWidth: '1280px',
           margin: '0 auto',
-          padding: '0.85rem 1.5rem',
+          padding: '0.9rem 1.5rem',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
-          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '2.5rem' }}>
+          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
             <span
               style={{
-                background: 'var(--accent-cyber)',
+                background: 'linear-gradient(135deg, var(--accent-cyber) 0%, #00b4d8 100%)',
                 color: '#000',
                 fontWeight: 900,
-                fontSize: '1rem',
-                padding: '0.2rem 0.55rem',
-                borderRadius: '4px',
+                fontSize: '1.05rem',
+                padding: '0.25rem 0.6rem',
+                borderRadius: '6px',
                 fontFamily: 'var(--font-mono)',
+                boxShadow: '0 0 12px rgba(0, 229, 153, 0.3)',
               }}
             >
               Ω
             </span>
             <span
               style={{
-                fontWeight: 700,
-                fontSize: '1.15rem',
-                letterSpacing: '-0.02em',
-                color: 'var(--text-primary)',
+                fontWeight: 800,
+                fontSize: '1.2rem',
+                letterSpacing: '-0.03em',
+                color: '#fff',
               }}
             >
               OmniFi
             </span>
           </Link>
 
-          <nav style={{ display: 'flex', gap: '0.5rem' }}>
+          <nav style={{ display: 'flex', gap: '0.4rem' }}>
             {navItems.map((item) => {
               const isActive = pathname === item.href;
               return (
@@ -76,8 +77,9 @@ export function Header() {
                   className="font-mono"
                   style={{
                     padding: '0.45rem 0.85rem',
-                    borderRadius: '6px',
+                    borderRadius: '8px',
                     fontSize: '0.85rem',
+                    fontWeight: 600,
                     color: isActive ? 'var(--accent-cyber)' : 'var(--text-secondary)',
                     background: isActive ? 'rgba(0, 229, 153, 0.08)' : 'transparent',
                     border: isActive
@@ -93,7 +95,7 @@ export function Header() {
           </nav>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
           <NetworkSelector />
           <WalletModal />
         </div>
@@ -101,4 +103,3 @@ export function Header() {
     </header>
   );
 }
-

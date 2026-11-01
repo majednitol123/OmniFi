@@ -34,6 +34,16 @@ export default function StatusDashboardPage() {
 
   const isHealthy = health?.status === 'ok' || health?.status === 'healthy';
 
+  const getNetworkBadge = (netId: string) => {
+    if (netId.startsWith('solana:')) {
+      return <span className="badge badge-low font-mono">Solana</span>;
+    }
+    if (netId === 'eip155:8453') {
+      return <span className="badge badge-blue font-mono">Base</span>;
+    }
+    return <span className="badge badge-purple font-mono">Ethereum</span>;
+  };
+
   return (
     <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '2rem 1.5rem' }}>
       <div
@@ -47,10 +57,10 @@ export default function StatusDashboardPage() {
         }}
       >
         <div>
-          <h1 style={{ fontSize: '1.75rem', fontWeight: 800, margin: '0 0 0.4rem 0' }}>
+          <h1 style={{ fontSize: '1.85rem', fontWeight: 800, margin: '0 0 0.4rem 0', letterSpacing: '-0.02em' }}>
             System Operations & Network Status
           </h1>
-          <p style={{ color: 'var(--text-secondary)', margin: 0, fontSize: '0.9rem' }}>
+          <p style={{ color: 'var(--text-secondary)', margin: 0, fontSize: '0.92rem' }}>
             Live health telemetry, RPC node availability, and protocol liquidity metrics
           </p>
         </div>
@@ -59,7 +69,7 @@ export default function StatusDashboardPage() {
           onClick={loadStatus}
           disabled={loading}
           className="btn btn-secondary font-mono"
-          style={{ fontSize: '0.85rem' }}
+          style={{ fontSize: '0.85rem', padding: '0.55rem 1rem', borderRadius: '8px' }}
         >
           {loading ? 'Refreshing...' : '↻ Refresh Status'}
         </button>
@@ -75,84 +85,81 @@ export default function StatusDashboardPage() {
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
+          padding: '1.5rem',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
           <div
             style={{
-              width: '14px',
-              height: '14px',
+              width: '16px',
+              height: '16px',
               borderRadius: '50%',
               background: isHealthy ? 'var(--accent-cyber)' : 'var(--accent-crimson)',
-              boxShadow: isHealthy ? '0 0 12px var(--accent-cyber)' : '0 0 12px var(--accent-crimson)',
+              boxShadow: isHealthy ? '0 0 16px var(--accent-cyber)' : '0 0 16px var(--accent-crimson)',
             }}
           />
           <div>
-            <div style={{ fontWeight: 700, fontSize: '1.1rem' }}>
+            <div style={{ fontWeight: 800, fontSize: '1.15rem' }}>
               {isHealthy ? 'All Systems Operational' : 'Protocol System Degraded'}
             </div>
-            <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
-              API Service: <span className="font-mono">{health?.status || 'unknown'}</span> • Last checked at {lastCheck || 'just now'}
+            <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
+              API Microservices: <span className="font-mono">{health?.status || 'unknown'}</span> • Last checked at {lastCheck || 'just now'}
             </div>
           </div>
         </div>
 
-        <span className={`badge ${isHealthy ? 'badge-confirmed' : 'badge-failed'}`}>
+        <span className={`badge ${isHealthy ? 'badge-confirmed' : 'badge-high'}`} style={{ fontSize: '0.85rem', padding: '0.35rem 0.75rem' }}>
           {health?.status ? health.status.toUpperCase() : 'UNKNOWN'}
         </span>
       </div>
 
       {/* Protocol Analytics Cards */}
-      <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '1rem' }}>
+      <h2 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '1.25rem' }}>
         Global Protocol Telemetry
       </h2>
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
           gap: '1rem',
           marginBottom: '2.5rem',
         }}
       >
-        <div className="card">
-          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>
-            Total Value Locked (USD)
-          </div>
-          <div className="font-mono" style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--accent-cyber)' }}>
+        <div className="stat-card">
+          <div className="stat-label">Total Value Locked (USD)</div>
+          <div className="stat-value" style={{ color: 'var(--accent-cyber)' }}>
             ${analytics?.totalTvlUsd ? Number(analytics.totalTvlUsd).toLocaleString() : '150,000,000'}
           </div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Aggregate multi-chain depth</div>
         </div>
 
-        <div className="card">
-          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>
-            24h Total Volume (USD)
-          </div>
-          <div className="font-mono" style={{ fontSize: '1.5rem', fontWeight: 700 }}>
+        <div className="stat-card">
+          <div className="stat-label">24h Total Volume (USD)</div>
+          <div className="stat-value">
             ${analytics?.totalVolume24hUsd ? Number(analytics.totalVolume24hUsd).toLocaleString() : '45,000,000'}
           </div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Trading turnover past 24 hours</div>
         </div>
 
-        <div className="card">
-          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>
-            24h Fees Accrued (USD)
-          </div>
-          <div className="font-mono" style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--accent-cyber)' }}>
+        <div className="stat-card">
+          <div className="stat-label">24h Fees Accrued (USD)</div>
+          <div className="stat-value" style={{ color: 'var(--accent-cyber)' }}>
             ${analytics?.totalFees24hUsd ? Number(analytics.totalFees24hUsd).toLocaleString() : '135,000'}
           </div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Distributed to liquidity providers</div>
         </div>
 
-        <div className="card">
-          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>
-            Active Verified Pools
-          </div>
-          <div className="font-mono" style={{ fontSize: '1.5rem', fontWeight: 700 }}>
+        <div className="stat-card">
+          <div className="stat-label">Active Verified Pools</div>
+          <div className="stat-value" style={{ color: 'var(--accent-blue)' }}>
             {analytics?.totalPools ?? 12}
           </div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Ethereum, Base, and Solana</div>
         </div>
       </div>
 
       {/* Network & RPC Node Health */}
-      <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '1rem' }}>
+      <h2 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '1.25rem' }}>
         Connected Blockchain Networks & RPC Nodes
       </h2>
       <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
@@ -164,21 +171,26 @@ export default function StatusDashboardPage() {
                 <th>Namespace / ChainRef</th>
                 <th>Native Asset</th>
                 <th>RPC Node Endpoint</th>
-                <th>Status</th>
+                <th style={{ textAlign: 'right' }}>Status</th>
               </tr>
             </thead>
             <tbody>
               {networks.length === 0 ? (
                 <tr>
-                  <td colSpan={5} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+                  <td colSpan={5} style={{ textAlign: 'center', padding: '2.5rem', color: 'var(--text-muted)' }}>
                     No networks reported by API daemon.
                   </td>
                 </tr>
               ) : (
                 networks.map((n) => (
                   <tr key={n.networkId}>
-                    <td style={{ fontWeight: 700 }}>{n.name}</td>
-                    <td className="font-mono" style={{ fontSize: '0.85rem' }}>
+                    <td>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                        {getNetworkBadge(n.networkId)}
+                        <span style={{ fontWeight: 700 }}>{n.name}</span>
+                      </div>
+                    </td>
+                    <td className="font-mono" style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
                       {n.namespace}:{n.chainRef}
                     </td>
                     <td>
@@ -189,9 +201,9 @@ export default function StatusDashboardPage() {
                     <td className="font-mono" style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
                       {n.rpcUrl}
                     </td>
-                    <td>
+                    <td style={{ textAlign: 'right' }}>
                       <span className="badge badge-confirmed font-mono">
-                        {n.status.toUpperCase()}
+                        ● {n.status.toUpperCase()}
                       </span>
                     </td>
                   </tr>
@@ -204,4 +216,3 @@ export default function StatusDashboardPage() {
     </div>
   );
 }
-

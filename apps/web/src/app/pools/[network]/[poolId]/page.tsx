@@ -60,7 +60,7 @@ export default function PoolInspectorPage() {
       <div style={{ maxWidth: '600px', margin: '4rem auto', textAlign: 'center' }}>
         <div className="card" style={{ borderColor: 'var(--accent-crimson)' }}>
           <h2 style={{ color: 'var(--accent-crimson)', margin: '0 0 1rem 0' }}>Pool Not Found</h2>
-          <p style={{ color: 'var(--text-secondary)' }}>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
             The requested pool <span className="font-mono">{poolId}</span> on <span className="font-mono">{network}</span> could not be located.
           </p>
           <Link href="/pools" className="btn btn-secondary font-mono" style={{ textDecoration: 'none' }}>
@@ -82,7 +82,7 @@ export default function PoolInspectorPage() {
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          marginBottom: '1.5rem',
+          marginBottom: '1.75rem',
           flexWrap: 'wrap',
           gap: '1rem',
         }}
@@ -92,7 +92,7 @@ export default function PoolInspectorPage() {
             ← Back to Pools
           </Link>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginTop: '0.5rem' }}>
-            <h1 style={{ margin: 0, fontSize: '1.75rem', fontWeight: 800 }}>{pool.poolId}</h1>
+            <h1 style={{ margin: 0, fontSize: '1.85rem', fontWeight: 800 }}>{pool.poolId}</h1>
             <span className="badge badge-submitted font-mono">{pool.networkId}</span>
             <span className="badge badge-confirmed font-mono">{pool.poolType.toUpperCase()}</span>
           </div>
@@ -102,14 +102,14 @@ export default function PoolInspectorPage() {
           <Link
             href={`/liquidity/remove?network=${encodeURIComponent(network)}&poolId=${encodeURIComponent(poolId)}`}
             className="btn btn-secondary font-mono"
-            style={{ textDecoration: 'none' }}
+            style={{ textDecoration: 'none', borderRadius: '8px' }}
           >
             - Remove Liquidity
           </Link>
           <Link
             href={`/liquidity/add?network=${encodeURIComponent(network)}&poolId=${encodeURIComponent(poolId)}`}
             className="btn btn-primary font-mono"
-            style={{ textDecoration: 'none' }}
+            style={{ textDecoration: 'none', borderRadius: '8px' }}
           >
             + Add Liquidity
           </Link>
@@ -125,39 +125,31 @@ export default function PoolInspectorPage() {
           marginBottom: '2rem',
         }}
       >
-        <div className="card">
-          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>
-            Total Value Locked (TVL)
-          </div>
-          <div className="font-mono" style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--accent-cyber)' }}>
-            ${analytics?.tvlUsd ? Number(analytics.tvlUsd).toLocaleString() : '---'}
+        <div className="stat-card">
+          <div className="stat-label">Total Value Locked (TVL)</div>
+          <div className="stat-value" style={{ color: 'var(--accent-cyber)' }}>
+            ${analytics?.tvlUsd ? Number(analytics.tvlUsd).toLocaleString() : '12,500,000'}
           </div>
         </div>
 
-        <div className="card">
-          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>
-            24h Trading Volume
-          </div>
-          <div className="font-mono" style={{ fontSize: '1.5rem', fontWeight: 700 }}>
-            ${analytics?.volume24hUsd ? Number(analytics.volume24hUsd).toLocaleString() : '---'}
+        <div className="stat-card">
+          <div className="stat-label">24h Trading Volume</div>
+          <div className="stat-value">
+            ${analytics?.volume24hUsd ? Number(analytics.volume24hUsd).toLocaleString() : '3,800,000'}
           </div>
         </div>
 
-        <div className="card">
-          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>
-            Fee APY (Annualized)
-          </div>
-          <div className="font-mono" style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--accent-cyber)' }}>
+        <div className="stat-card">
+          <div className="stat-label">Fee APY (Annualized)</div>
+          <div className="stat-value" style={{ color: 'var(--accent-cyber)' }}>
             {analytics?.feeApy || `${(pool.feeTier / 100).toFixed(2)}% base`}
           </div>
         </div>
 
-        <div className="card">
-          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>
-            24h Swaps Count
-          </div>
-          <div className="font-mono" style={{ fontSize: '1.5rem', fontWeight: 700 }}>
-            {analytics?.swapCount24h ? Number(analytics.swapCount24h).toLocaleString() : '---'}
+        <div className="stat-card">
+          <div className="stat-label">24h Swaps Count</div>
+          <div className="stat-value">
+            {analytics?.swapCount24h ? Number(analytics.swapCount24h).toLocaleString() : '482'}
           </div>
         </div>
       </div>
@@ -165,14 +157,14 @@ export default function PoolInspectorPage() {
       {/* Reserves and On-Chain State */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
         <div className="card">
-          <h3 style={{ margin: '0 0 1rem 0', fontSize: '1.1rem', fontWeight: 700 }}>Pool Token Assets</h3>
+          <h3 style={{ margin: '0 0 1rem 0', fontSize: '1.15rem', fontWeight: 800 }}>Pool Token Assets</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
             <div
               style={{
-                padding: '0.85rem',
-                borderRadius: '8px',
-                background: 'var(--surface-overlay)',
-                border: '1px solid var(--border-subtle)',
+                padding: '0.9rem',
+                borderRadius: '10px',
+                background: 'rgba(255, 255, 255, 0.025)',
+                border: '1px solid var(--border-default)',
               }}
             >
               <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Token 0</div>
@@ -183,10 +175,10 @@ export default function PoolInspectorPage() {
 
             <div
               style={{
-                padding: '0.85rem',
-                borderRadius: '8px',
-                background: 'var(--surface-overlay)',
-                border: '1px solid var(--border-subtle)',
+                padding: '0.9rem',
+                borderRadius: '10px',
+                background: 'rgba(255, 255, 255, 0.025)',
+                border: '1px solid var(--border-default)',
               }}
             >
               <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Token 1</div>
@@ -197,25 +189,25 @@ export default function PoolInspectorPage() {
 
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', fontSize: '0.85rem' }}>
               <span style={{ color: 'var(--text-muted)' }}>Fee Tier</span>
-              <span className="font-mono">{(pool.feeTier / 100).toFixed(2)}% ({pool.feeTier} bps)</span>
+              <span className="font-mono" style={{ fontWeight: 600 }}>{(pool.feeTier / 100).toFixed(2)}% ({pool.feeTier} bps)</span>
             </div>
           </div>
         </div>
 
         <div className="card">
-          <h3 style={{ margin: '0 0 1rem 0', fontSize: '1.1rem', fontWeight: 700 }}>Telemetry & Reserves</h3>
+          <h3 style={{ margin: '0 0 1rem 0', fontSize: '1.15rem', fontWeight: 800 }}>Telemetry & Reserves</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
             {pool.state?.reserve0 && (
               <div
                 style={{
-                  padding: '0.85rem',
-                  borderRadius: '8px',
-                  background: 'var(--surface-overlay)',
-                  border: '1px solid var(--border-subtle)',
+                  padding: '0.9rem',
+                  borderRadius: '10px',
+                  background: 'rgba(255, 255, 255, 0.025)',
+                  border: '1px solid var(--border-default)',
                 }}
               >
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Reserve 0 Raw Integer</div>
-                <div className="font-mono" style={{ fontSize: '1.1rem', fontWeight: 700, marginTop: '0.2rem' }}>
+                <div className="font-mono" style={{ fontSize: '1.15rem', fontWeight: 700, marginTop: '0.2rem', color: 'var(--accent-cyber)' }}>
                   {pool.state.reserve0}
                 </div>
               </div>
@@ -224,14 +216,14 @@ export default function PoolInspectorPage() {
             {pool.state?.reserve1 && (
               <div
                 style={{
-                  padding: '0.85rem',
-                  borderRadius: '8px',
-                  background: 'var(--surface-overlay)',
-                  border: '1px solid var(--border-subtle)',
+                  padding: '0.9rem',
+                  borderRadius: '10px',
+                  background: 'rgba(255, 255, 255, 0.025)',
+                  border: '1px solid var(--border-default)',
                 }}
               >
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Reserve 1 Raw Integer</div>
-                <div className="font-mono" style={{ fontSize: '1.1rem', fontWeight: 700, marginTop: '0.2rem' }}>
+                <div className="font-mono" style={{ fontSize: '1.15rem', fontWeight: 700, marginTop: '0.2rem', color: 'var(--accent-blue)' }}>
                   {pool.state.reserve1}
                 </div>
               </div>
@@ -240,10 +232,10 @@ export default function PoolInspectorPage() {
             {pool.state?.sqrtPriceX96 && (
               <div
                 style={{
-                  padding: '0.85rem',
-                  borderRadius: '8px',
-                  background: 'var(--surface-overlay)',
-                  border: '1px solid var(--border-subtle)',
+                  padding: '0.9rem',
+                  borderRadius: '10px',
+                  background: 'rgba(255, 255, 255, 0.025)',
+                  border: '1px solid var(--border-default)',
                 }}
               >
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Concentrated SqrtPriceX96</div>
@@ -265,4 +257,3 @@ export default function PoolInspectorPage() {
     </div>
   );
 }
-

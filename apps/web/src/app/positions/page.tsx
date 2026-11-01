@@ -8,7 +8,7 @@ import { apiClient } from '../../lib/api';
 import { executeEvmTransaction, executeSolanaTransaction, TxStatus } from '../../lib/tx-executor';
 
 export default function PositionsPage() {
-  const { address, selectedNetworkId } = useWallet();
+  const { address, selectedNetworkId, openWalletModal } = useWallet();
 
   const [positions, setPositions] = useState<readonly PositionSummary[]>([]);
   const [loading, setLoading] = useState(false);
@@ -110,25 +110,48 @@ export default function PositionsPage() {
         }}
       >
         <div>
-          <h1 style={{ fontSize: '1.75rem', fontWeight: 800, margin: '0 0 0.4rem 0' }}>
+          <h1 style={{ fontSize: '1.85rem', fontWeight: 800, margin: '0 0 0.4rem 0', letterSpacing: '-0.02em' }}>
             My Liquidity Positions
           </h1>
-          <p style={{ color: 'var(--text-secondary)', margin: 0, fontSize: '0.9rem' }}>
+          <p style={{ color: 'var(--text-secondary)', margin: 0, fontSize: '0.92rem' }}>
             Manage concentrated liquidity ranges, view earned yields, and harvest protocol fees
           </p>
         </div>
 
-        <Link href="/liquidity/add" className="btn btn-primary font-mono" style={{ textDecoration: 'none' }}>
+        <Link href="/liquidity/add" className="btn btn-primary font-mono" style={{ padding: '0.65rem 1.25rem', fontSize: '0.9rem', borderRadius: '10px' }}>
           + New Position
         </Link>
       </div>
 
       {!address ? (
-        <div className="card" style={{ textAlign: 'center', padding: '4rem 1.5rem' }}>
-          <h2 style={{ fontSize: '1.25rem', marginBottom: '0.75rem' }}>Wallet Not Connected</h2>
-          <p style={{ color: 'var(--text-secondary)', maxWidth: '420px', margin: '0 auto 1.5rem auto' }}>
-            Connect your browser wallet using the button in the top navigation to inspect your active LP positions.
+        <div className="card" style={{ textAlign: 'center', padding: '4rem 1.5rem', maxWidth: '580px', margin: '2rem auto' }}>
+          <div
+            style={{
+              width: '56px',
+              height: '56px',
+              borderRadius: '50%',
+              background: 'rgba(0, 229, 153, 0.1)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '1.5rem',
+              color: 'var(--accent-cyber)',
+              margin: '0 auto 1.25rem auto',
+            }}
+          >
+            🔒
+          </div>
+          <h2 style={{ fontSize: '1.35rem', fontWeight: 800, marginBottom: '0.6rem' }}>Wallet Not Connected</h2>
+          <p style={{ color: 'var(--text-secondary)', margin: '0 auto 1.75rem auto', fontSize: '0.92rem', lineHeight: 1.5 }}>
+            Connect your browser wallet (MetaMask, Coinbase Wallet, or Phantom) to inspect and manage your active liquidity positions.
           </p>
+          <button
+            onClick={openWalletModal}
+            className="btn btn-primary font-mono"
+            style={{ padding: '0.75rem 1.5rem', fontSize: '0.95rem', borderRadius: '10px' }}
+          >
+            Connect Wallet Now
+          </button>
         </div>
       ) : (
         <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
@@ -137,7 +160,7 @@ export default function PositionsPage() {
               <thead>
                 <tr>
                   <th>Position #</th>
-                  <th>Pool</th>
+                  <th>Pool Identifier</th>
                   <th>Tick Range</th>
                   <th>Liquidity Units</th>
                   <th>Unclaimed Fees</th>
@@ -147,14 +170,23 @@ export default function PositionsPage() {
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={6} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
-                      Querying on-chain position records...
+                    <td colSpan={6} style={{ textAlign: 'center', padding: '3.5rem', color: 'var(--text-muted)' }}>
+                      Querying on-chain position records for {address}...
                     </td>
                   </tr>
                 ) : positions.length === 0 ? (
                   <tr>
-                    <td colSpan={6} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
-                      No liquidity positions found for connected wallet on {selectedNetworkId}.
+                    <td colSpan={6} style={{ textAlign: 'center', padding: '3.5rem', color: 'var(--text-muted)' }}>
+                      <div style={{ marginBottom: '1rem', fontSize: '0.95rem' }}>
+                        No liquidity positions found for {address.slice(0, 8)}... on {selectedNetworkId}.
+                      </div>
+                      <Link
+                        href="/liquidity/add"
+                        className="btn btn-secondary font-mono"
+                        style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
+                      >
+                        + Create Your First Position
+                      </Link>
                     </td>
                   </tr>
                 ) : (
@@ -163,20 +195,20 @@ export default function PositionsPage() {
 
                     return (
                       <tr key={pos.positionId}>
-                        <td className="font-mono" style={{ fontWeight: 700 }}>
+                        <td className="font-mono" style={{ fontWeight: 800, color: 'var(--accent-cyber)' }}>
                           #{pos.positionId}
                         </td>
                         <td>
-                          <div style={{ fontWeight: 600 }}>{pos.poolId}</div>
-                          <span className="badge badge-submitted font-mono" style={{ fontSize: '0.7rem' }}>
-                            {(pos.feeTier / 100).toFixed(2)}% Tier
+                          <div style={{ fontWeight: 700 }}>{pos.poolId}</div>
+                          <span className="badge badge-submitted font-mono" style={{ fontSize: '0.7rem', marginTop: '0.2rem' }}>
+                            {(pos.feeTier / 100).toFixed(2)}% Fee Tier
                           </span>
                         </td>
-                        <td className="font-mono" style={{ fontSize: '0.8rem' }}>
+                        <td className="font-mono" style={{ fontSize: '0.82rem' }}>
                           [{pos.tickLower} ↔ {pos.tickUpper}]
                         </td>
-                        <td className="font-mono">{pos.liquidity}</td>
-                        <td className="font-mono" style={{ color: 'var(--accent-cyber)', fontSize: '0.8rem' }}>
+                        <td className="font-mono" style={{ fontWeight: 600 }}>{pos.liquidity}</td>
+                        <td className="font-mono" style={{ color: 'var(--accent-cyber)', fontSize: '0.82rem' }}>
                           <div>0: {pos.tokensOwed0}</div>
                           <div>1: {pos.tokensOwed1}</div>
                         </td>
@@ -186,14 +218,14 @@ export default function PositionsPage() {
                               onClick={() => handleCollectFees(pos)}
                               disabled={isCollecting || txStatus === 'submitting'}
                               className="btn btn-secondary font-mono"
-                              style={{ padding: '0.35rem 0.65rem', fontSize: '0.75rem', color: 'var(--accent-cyber)' }}
+                              style={{ padding: '0.4rem 0.75rem', fontSize: '0.78rem', color: 'var(--accent-cyber)', borderRadius: '6px' }}
                             >
                               {isCollecting ? 'Harvesting...' : 'Collect Fees'}
                             </button>
                             <Link
                               href={`/liquidity/remove?poolId=${encodeURIComponent(pos.poolId)}&positionId=${encodeURIComponent(pos.positionId)}`}
                               className="btn btn-secondary font-mono"
-                              style={{ padding: '0.35rem 0.65rem', fontSize: '0.75rem', textDecoration: 'none' }}
+                              style={{ padding: '0.4rem 0.75rem', fontSize: '0.78rem', borderRadius: '6px' }}
                             >
                               Unwind
                             </Link>
@@ -219,6 +251,7 @@ export default function PositionsPage() {
             justifyContent: 'space-between',
             alignItems: 'center',
             borderColor: 'var(--accent-cyber)',
+            padding: '1.25rem',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -239,7 +272,7 @@ export default function PositionsPage() {
           </div>
 
           {txHash && (
-            <div className="font-mono" style={{ fontSize: '0.8rem' }}>
+            <div className="font-mono" style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
               Hash: {txHash.slice(0, 10)}...{txHash.slice(-8)}
             </div>
           )}

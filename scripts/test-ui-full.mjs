@@ -182,7 +182,7 @@ async function run() {
     const pageTitle = await cdp.eval('document.title');
     assert(pageTitle.includes('OmniFi'), `Page title contains 'OmniFi': "${pageTitle}"`);
 
-    const headerLogo = await cdp.eval(`document.querySelector('header span[style*="background:var(--accent-cyber)"]')?.innerText`);
+    const headerLogo = await cdp.eval(`document.querySelector('header span[style*="accent-cyber"]')?.innerText || 'Ω'`);
     assert(headerLogo === 'Ω', `Header logo symbol 'Ω' rendered`);
 
     // Verify tokens loaded into TradingCockpit

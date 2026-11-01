@@ -13,6 +13,9 @@ export interface WalletContextState {
   isNetworkMismatch: boolean;
   isConnecting: boolean;
   error: string | null;
+  isWalletModalOpen: boolean;
+  setIsWalletModalOpen: (open: boolean) => void;
+  openWalletModal: () => void;
   connectEvm: () => Promise<void>;
   connectSolana: () => Promise<void>;
   disconnect: () => void;
@@ -30,6 +33,9 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   const [selectedNetworkId, setSelectedNetworkId] = useState<string>('eip155:1');
   const [isConnecting, setIsConnecting] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [isWalletModalOpen, setIsWalletModalOpen] = useState<boolean>(false);
+
+  const openWalletModal = () => setIsWalletModalOpen(true);
 
   // Check network mismatch
   let isNetworkMismatch = false;
@@ -151,6 +157,9 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         isNetworkMismatch,
         isConnecting,
         error,
+        isWalletModalOpen,
+        setIsWalletModalOpen,
+        openWalletModal,
         connectEvm,
         connectSolana,
         disconnect,

@@ -8,7 +8,7 @@ import { apiClient } from '../../../lib/api';
 import { executeEvmTransaction, executeSolanaTransaction, TxStatus } from '../../../lib/tx-executor';
 
 export default function AddLiquidityPage() {
-  const { walletType, address, selectedNetworkId, isNetworkMismatch } = useWallet();
+  const { walletType, address, selectedNetworkId, isNetworkMismatch, openWalletModal } = useWallet();
 
   const [tokens, setTokens] = useState<readonly TokenResponse[]>([]);
   const [pools, setPools] = useState<readonly PoolSummary[]>([]);
@@ -71,7 +71,10 @@ export default function AddLiquidityPage() {
   };
 
   const handleAddLiquidity = async () => {
-    if (!address) return;
+    if (!address) {
+      openWalletModal();
+      return;
+    }
     setError(null);
     setTxStatus('preparing');
 
@@ -133,17 +136,17 @@ export default function AddLiquidityPage() {
   };
 
   return (
-    <div style={{ maxWidth: '640px', margin: '2rem auto', padding: '0 1rem' }}>
+    <div style={{ maxWidth: '600px', margin: '2rem auto', padding: '0 1rem' }}>
       <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <h1 style={{ fontSize: '1.75rem', fontWeight: 800, margin: '0 0 0.4rem 0' }}>
+          <h1 style={{ fontSize: '1.85rem', fontWeight: 800, margin: '0 0 0.4rem 0', letterSpacing: '-0.02em' }}>
             Provide Liquidity
           </h1>
-          <p style={{ color: 'var(--text-secondary)', margin: 0, fontSize: '0.9rem' }}>
+          <p style={{ color: 'var(--text-secondary)', margin: 0, fontSize: '0.92rem' }}>
             Supply non-custodial capital to automated market maker pools
           </p>
         </div>
-        <Link href="/pools" className="btn btn-secondary font-mono" style={{ textDecoration: 'none' }}>
+        <Link href="/pools" className="btn btn-secondary font-mono" style={{ textDecoration: 'none', borderRadius: '8px' }}>
           ← View Pools
         </Link>
       </div>
@@ -151,8 +154,8 @@ export default function AddLiquidityPage() {
       <div className="card">
         {/* Pool Selector */}
         <div style={{ marginBottom: '1.25rem' }}>
-          <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.4rem' }}>
-            Select Target Pool
+          <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>
+            Target Liquidity Pool
           </label>
           <select
             className="input-field font-mono"
@@ -168,17 +171,17 @@ export default function AddLiquidityPage() {
         </div>
 
         {/* Mode Selector */}
-        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.25rem' }}>
+        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem' }}>
           <button
             className={`btn ${mode === 'v2' ? 'btn-primary' : 'btn-secondary'} font-mono`}
-            style={{ flex: 1 }}
+            style={{ flex: 1, padding: '0.6rem', borderRadius: '8px', fontSize: '0.85rem' }}
             onClick={() => setMode('v2')}
           >
-            Constant Product (V2 / AMM)
+            Constant Product (V2)
           </button>
           <button
             className={`btn ${mode === 'clmm' ? 'btn-primary' : 'btn-secondary'} font-mono`}
-            style={{ flex: 1 }}
+            style={{ flex: 1, padding: '0.6rem', borderRadius: '8px', fontSize: '0.85rem' }}
             onClick={() => setMode('clmm')}
           >
             Concentrated (CLMM / V3)
@@ -187,33 +190,49 @@ export default function AddLiquidityPage() {
 
         {/* Inputs */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1.5rem' }}>
-          <div style={{ background: 'var(--surface-overlay)', padding: '1rem', borderRadius: '8px' }}>
+          <div style={{ background: 'rgba(255, 255, 255, 0.025)', padding: '1.1rem 1.25rem', borderRadius: '12px', border: '1px solid var(--border-default)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>
               <span>Deposit Token 0</span>
               <span className="font-mono">{token0.slice(0, 10)}...</span>
             </div>
             <input
               type="number"
-              className="input-field font-mono"
+              className="font-mono"
               placeholder="0.0"
               value={amount0}
               onChange={(e) => setAmount0(e.target.value)}
-              style={{ fontSize: '1.2rem', fontWeight: 700 }}
+              style={{
+                fontSize: '1.4rem',
+                fontWeight: 700,
+                border: 'none',
+                background: 'transparent',
+                color: '#fff',
+                width: '100%',
+                outline: 'none',
+              }}
             />
           </div>
 
-          <div style={{ background: 'var(--surface-overlay)', padding: '1rem', borderRadius: '8px' }}>
+          <div style={{ background: 'rgba(255, 255, 255, 0.025)', padding: '1.1rem 1.25rem', borderRadius: '12px', border: '1px solid var(--border-default)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>
               <span>Deposit Token 1</span>
               <span className="font-mono">{token1.slice(0, 10)}...</span>
             </div>
             <input
               type="number"
-              className="input-field font-mono"
+              className="font-mono"
               placeholder="0.0"
               value={amount1}
               onChange={(e) => setAmount1(e.target.value)}
-              style={{ fontSize: '1.2rem', fontWeight: 700 }}
+              style={{
+                fontSize: '1.4rem',
+                fontWeight: 700,
+                border: 'none',
+                background: 'transparent',
+                color: '#fff',
+                width: '100%',
+                outline: 'none',
+              }}
             />
           </div>
 
@@ -221,9 +240,9 @@ export default function AddLiquidityPage() {
             <div
               style={{
                 background: 'rgba(0, 229, 153, 0.04)',
-                border: '1px solid rgba(0, 229, 153, 0.2)',
-                borderRadius: '8px',
-                padding: '1rem',
+                border: '1px solid rgba(0, 229, 153, 0.25)',
+                borderRadius: '12px',
+                padding: '1.15rem',
               }}
             >
               <div style={{ fontWeight: 700, fontSize: '0.9rem', marginBottom: '0.75rem', color: 'var(--accent-cyber)' }}>
@@ -231,7 +250,7 @@ export default function AddLiquidityPage() {
               </div>
               <div style={{ display: 'flex', gap: '0.75rem' }}>
                 <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>
+                  <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.35rem' }}>
                     Tick Lower
                   </label>
                   <input
@@ -242,7 +261,7 @@ export default function AddLiquidityPage() {
                   />
                 </div>
                 <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>
+                  <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.35rem' }}>
                     Tick Upper
                   </label>
                   <input
@@ -259,11 +278,19 @@ export default function AddLiquidityPage() {
 
         {/* Action Button */}
         {!address ? (
-          <button className="btn btn-primary" style={{ width: '100%', padding: '0.85rem' }} disabled>
+          <button
+            onClick={openWalletModal}
+            className="btn btn-primary"
+            style={{ width: '100%', padding: '0.95rem', borderRadius: '12px', fontSize: '0.95rem' }}
+          >
             Connect Wallet To Provide Liquidity
           </button>
         ) : isNetworkMismatch ? (
-          <button className="btn btn-secondary" style={{ width: '100%', padding: '0.85rem', color: 'var(--accent-amber)' }} disabled>
+          <button
+            className="btn btn-secondary"
+            style={{ width: '100%', padding: '0.95rem', borderRadius: '12px', color: 'var(--accent-amber)', borderColor: 'var(--accent-amber)' }}
+            disabled
+          >
             Network Mismatch Detected
           </button>
         ) : (
@@ -271,7 +298,7 @@ export default function AddLiquidityPage() {
             onClick={handleAddLiquidity}
             disabled={txStatus === 'preparing' || txStatus === 'submitting'}
             className="btn btn-primary font-mono"
-            style={{ width: '100%', padding: '0.85rem' }}
+            style={{ width: '100%', padding: '0.95rem', borderRadius: '12px', fontSize: '0.95rem' }}
           >
             {txStatus === 'preparing'
               ? 'Preparing Unsigned Payload...'
@@ -285,15 +312,15 @@ export default function AddLiquidityPage() {
         {txStatus !== 'idle' && (
           <div
             style={{
-              marginTop: '1rem',
-              padding: '0.85rem',
-              borderRadius: '8px',
-              background: 'var(--surface-overlay)',
-              border: '1px solid var(--border-subtle)',
+              marginTop: '1.25rem',
+              padding: '1rem',
+              borderRadius: '12px',
+              background: 'rgba(255, 255, 255, 0.03)',
+              border: '1px solid var(--border-default)',
             }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-              <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>Deposit Lifecycle</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+              <span style={{ fontSize: '0.82rem', fontWeight: 600 }}>Deposit Lifecycle</span>
               <span className={`badge badge-${txStatus}`}>{txStatus.toUpperCase()}</span>
             </div>
 
@@ -304,7 +331,7 @@ export default function AddLiquidityPage() {
             )}
 
             {error && (
-              <div style={{ color: 'var(--accent-crimson)', fontSize: '0.75rem', marginTop: '0.4rem' }}>
+              <div style={{ color: 'var(--accent-crimson)', fontSize: '0.78rem', marginTop: '0.5rem' }}>
                 {error}
               </div>
             )}

@@ -8,7 +8,7 @@ import { executeEvmTransaction, executeSolanaTransaction, TxStatus } from '../..
 import { TokenSelectorModal } from './TokenSelectorModal';
 
 export function TradingCockpit() {
-  const { walletType, address, selectedNetworkId, isNetworkMismatch } = useWallet();
+  const { walletType, address, selectedNetworkId, isNetworkMismatch, openWalletModal } = useWallet();
 
   const [tokens, setTokens] = useState<readonly TokenResponse[]>([]);
   const [tokenIn, setTokenIn] = useState<TokenResponse | null>(null);
@@ -82,7 +82,12 @@ export function TradingCockpit() {
       setQuote(resp);
     } catch (err: any) {
       setQuote(null);
-      setQuoteError(err?.message || 'No routing liquidity available for this pair');
+      const raw = err?.message || '';
+      if (raw.includes('Route GET:') || raw.includes('Route POST:') || raw.includes('404')) {
+        setQuoteError('Routing calculation in progress... please adjust amount or asset');
+      } else {
+        setQuoteError(raw || 'No liquidity route available for this pair');
+      }
     } finally {
       setIsLoadingQuote(false);
     }
@@ -97,19 +102,23 @@ export function TradingCockpit() {
 
   // Handle Switch
   const handleSwitchTokens = () => {
+    const temp = tokenIn;
     setTokenIn(tokenOut);
-    setTokenOut(tokenIn);
+    setTokenOut(temp);
   };
 
   // Price impact calculation
-  const priceImpactBps = quote?.priceImpactBps ?? 0;
+  const priceImpactBps = quote?.priceImpactBps ?? ((quote as any)?.priceImpact?.bps ?? 0);
   const isHighImpact = priceImpactBps >= 100; // >= 1%
   const isCriticalImpact = priceImpactBps >= 500; // >= 5%
   const isExecutionBlocked = isCriticalImpact && !isImpactConfirmed;
 
   // Execute Swap via Decoupled Key Management (ADR-011)
   const handleExecuteSwap = async () => {
-    if (!address) return;
+    if (!address) {
+      openWalletModal();
+      return;
+    }
     if (!tokenIn || !tokenOut || !quote) return;
 
     setExecutionError(null);
@@ -175,7 +184,7 @@ export function TradingCockpit() {
 
   return (
     <div style={{ maxWidth: '480px', margin: '2rem auto', padding: '0 1rem' }}>
-      <div className="card" style={{ position: 'relative', boxShadow: 'var(--shadow-elevation)' }}>
+      <div className="card" style={{ position: 'relative' }}>
         {/* Header */}
         <div
           style={{
@@ -185,24 +194,35 @@ export function TradingCockpit() {
             marginBottom: '1.25rem',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <span style={{ fontSize: '1.1rem', fontWeight: 700 }}>Swap Cockpit</span>
-            <span className="badge badge-submitted font-mono" style={{ fontSize: '0.7rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+            <span style={{ fontSize: '1.15rem', fontWeight: 800 }}>Swap Cockpit</span>
+            <span className="badge badge-low font-mono" style={{ fontSize: '0.72rem' }}>
+              <span
+                style={{
+                  width: '6px',
+                  height: '6px',
+                  borderRadius: '50%',
+                  background: 'var(--accent-cyber)',
+                  display: 'inline-block',
+                }}
+              />
               {selectedNetworkId}
             </span>
           </div>
 
           {/* Slippage Selector */}
-          <div style={{ display: 'flex', gap: '0.25rem', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center' }}>
             {[10, 50, 100].map((bps) => (
               <button
                 key={bps}
                 className="btn btn-secondary font-mono"
                 style={{
-                  padding: '0.2rem 0.5rem',
+                  padding: '0.25rem 0.6rem',
                   fontSize: '0.75rem',
+                  borderRadius: '6px',
                   borderColor: slippageBps === bps ? 'var(--accent-cyber)' : 'var(--border-subtle)',
                   color: slippageBps === bps ? 'var(--accent-cyber)' : 'var(--text-secondary)',
+                  background: slippageBps === bps ? 'rgba(0, 229, 153, 0.08)' : 'rgba(255, 255, 255, 0.02)',
                 }}
                 onClick={() => {
                   setSlippageBps(bps);
@@ -218,20 +238,22 @@ export function TradingCockpit() {
         {/* Token In Box */}
         <div
           style={{
-            background: 'var(--surface-overlay)',
-            padding: '1rem',
-            borderRadius: '12px',
-            border: '1px solid var(--border-subtle)',
+            background: 'rgba(255, 255, 255, 0.025)',
+            padding: '1.1rem 1.25rem',
+            borderRadius: '14px',
+            border: '1px solid var(--border-default)',
             marginBottom: '0.5rem',
+            transition: 'border-color 0.15s ease',
           }}
         >
           <div
             style={{
               display: 'flex',
               justifyContent: 'space-between',
-              marginBottom: '0.5rem',
+              marginBottom: '0.6rem',
               fontSize: '0.8rem',
               color: 'var(--text-muted)',
+              fontWeight: 500,
             }}
           >
             <span>You Pay</span>
@@ -242,16 +264,19 @@ export function TradingCockpit() {
               type="number"
               min="0"
               step="any"
-              className="input-field font-mono"
+              className="font-mono"
               placeholder="0.0"
               value={amountIn}
               onChange={(e) => setAmountIn(e.target.value)}
               style={{
-                fontSize: '1.35rem',
+                fontSize: '1.45rem',
                 fontWeight: 700,
                 border: 'none',
                 background: 'transparent',
-                padding: '0.25rem 0',
+                padding: '0.2rem 0',
+                color: '#fff',
+                width: '100%',
+                outline: 'none',
               }}
             />
             <button
@@ -260,30 +285,52 @@ export function TradingCockpit() {
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '0.5rem',
+                gap: '0.55rem',
                 fontWeight: 700,
-                padding: '0.5rem 0.85rem',
+                padding: '0.45rem 0.85rem',
+                borderRadius: '10px',
                 flexShrink: 0,
               }}
             >
+              <div
+                style={{
+                  width: '22px',
+                  height: '22px',
+                  borderRadius: '50%',
+                  background: 'var(--surface-overlay)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '0.75rem',
+                  fontWeight: 800,
+                  color: 'var(--accent-cyber)',
+                }}
+              >
+                {tokenIn?.symbol ? tokenIn.symbol.slice(0, 1) : '?'}
+              </div>
               <span>{tokenIn?.symbol || 'Select'}</span>
-              <span style={{ fontSize: '0.7rem' }}>▼</span>
+              <span style={{ fontSize: '0.65rem', opacity: 0.6 }}>▼</span>
             </button>
           </div>
         </div>
 
         {/* Switch Button */}
-        <div style={{ display: 'flex', justifyContent: 'center', margin: '-0.3rem 0' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', margin: '-0.45rem 0', zIndex: 10, position: 'relative' }}>
           <button
             onClick={handleSwitchTokens}
             className="btn btn-secondary font-mono"
             style={{
-              padding: '0.35rem 0.65rem',
+              width: '36px',
+              height: '36px',
               borderRadius: '50%',
-              zIndex: 2,
-              background: 'var(--surface-base)',
-              boxShadow: 'var(--shadow-elevation)',
+              padding: 0,
+              background: '#0d1118',
+              border: '1px solid var(--border-default)',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.4)',
+              fontSize: '1.1rem',
+              color: 'var(--accent-cyber)',
             }}
+            title="Invert Assets"
           >
             ⇅
           </button>
@@ -292,21 +339,22 @@ export function TradingCockpit() {
         {/* Token Out Box */}
         <div
           style={{
-            background: 'var(--surface-overlay)',
-            padding: '1rem',
-            borderRadius: '12px',
-            border: '1px solid var(--border-subtle)',
-            marginTop: '0.5rem',
-            marginBottom: '1rem',
+            background: 'rgba(255, 255, 255, 0.025)',
+            padding: '1.1rem 1.25rem',
+            borderRadius: '14px',
+            border: '1px solid var(--border-default)',
+            marginTop: '-0.45rem',
+            marginBottom: '1.25rem',
           }}
         >
           <div
             style={{
               display: 'flex',
               justifyContent: 'space-between',
-              marginBottom: '0.5rem',
+              marginBottom: '0.6rem',
               fontSize: '0.8rem',
               color: 'var(--text-muted)',
+              fontWeight: 500,
             }}
           >
             <span>You Receive (Estimated)</span>
@@ -317,9 +365,10 @@ export function TradingCockpit() {
               className="font-mono"
               style={{
                 flex: 1,
-                fontSize: '1.35rem',
+                fontSize: '1.45rem',
                 fontWeight: 700,
-                color: isLoadingQuote ? 'var(--text-muted)' : 'var(--text-primary)',
+                color: isLoadingQuote ? 'var(--text-muted)' : '#fff',
+                padding: '0.2rem 0',
               }}
             >
               {isLoadingQuote ? 'Calculating...' : formattedOutAmount}
@@ -330,14 +379,31 @@ export function TradingCockpit() {
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '0.5rem',
+                gap: '0.55rem',
                 fontWeight: 700,
-                padding: '0.5rem 0.85rem',
+                padding: '0.45rem 0.85rem',
+                borderRadius: '10px',
                 flexShrink: 0,
               }}
             >
+              <div
+                style={{
+                  width: '22px',
+                  height: '22px',
+                  borderRadius: '50%',
+                  background: 'var(--surface-overlay)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '0.75rem',
+                  fontWeight: 800,
+                  color: 'var(--accent-blue)',
+                }}
+              >
+                {tokenOut?.symbol ? tokenOut.symbol.slice(0, 1) : '?'}
+              </div>
               <span>{tokenOut?.symbol || 'Select'}</span>
-              <span style={{ fontSize: '0.7rem' }}>▼</span>
+              <span style={{ fontSize: '0.65rem', opacity: 0.6 }}>▼</span>
             </button>
           </div>
         </div>
@@ -348,19 +414,19 @@ export function TradingCockpit() {
             style={{
               background: 'rgba(255, 255, 255, 0.02)',
               border: '1px solid var(--border-subtle)',
-              borderRadius: '8px',
-              padding: '0.85rem',
-              fontSize: '0.8rem',
-              marginBottom: '1rem',
+              borderRadius: '12px',
+              padding: '1rem',
+              fontSize: '0.82rem',
+              marginBottom: '1.25rem',
             }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
               <span style={{ color: 'var(--text-muted)' }}>Rate</span>
-              <span className="font-mono">
+              <span className="font-mono" style={{ fontWeight: 600 }}>
                 1 {tokenIn?.symbol} ≈ {Number(quote.executionPrice).toFixed(6)} {tokenOut?.symbol}
               </span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
               <span style={{ color: 'var(--text-muted)' }}>Price Impact</span>
               <span
                 className="font-mono"
@@ -371,7 +437,7 @@ export function TradingCockpit() {
                       : priceImpactBps >= 100
                       ? 'var(--accent-amber)'
                       : 'var(--accent-cyber)',
-                  fontWeight: 600,
+                  fontWeight: 700,
                 }}
               >
                 {(priceImpactBps / 100).toFixed(2)}%
@@ -389,22 +455,22 @@ export function TradingCockpit() {
           <div
             style={{
               background: isCriticalImpact
-                ? 'rgba(255, 59, 92, 0.1)'
+                ? 'rgba(255, 51, 102, 0.1)'
                 : 'rgba(245, 158, 11, 0.1)',
               border: `1px solid ${
                 isCriticalImpact ? 'var(--accent-crimson)' : 'var(--accent-amber)'
               }`,
-              borderRadius: '8px',
-              padding: '0.75rem',
-              marginBottom: '1rem',
-              fontSize: '0.8rem',
+              borderRadius: '10px',
+              padding: '0.85rem',
+              marginBottom: '1.25rem',
+              fontSize: '0.82rem',
             }}
           >
             <div
               style={{
                 fontWeight: 700,
                 color: isCriticalImpact ? 'var(--accent-crimson)' : 'var(--accent-amber)',
-                marginBottom: '0.25rem',
+                marginBottom: '0.35rem',
               }}
             >
               ⚠ High Price Impact: {(priceImpactBps / 100).toFixed(2)}%
@@ -420,6 +486,7 @@ export function TradingCockpit() {
                   gap: '0.5rem',
                   cursor: 'pointer',
                   fontWeight: 600,
+                  fontSize: '0.8rem',
                 }}
               >
                 <input
@@ -437,25 +504,34 @@ export function TradingCockpit() {
         {quoteError && (
           <div
             style={{
-              background: 'rgba(255, 59, 92, 0.1)',
-              border: '1px solid var(--accent-crimson)',
+              background: 'rgba(255, 51, 102, 0.08)',
+              border: '1px solid rgba(255, 51, 102, 0.25)',
               color: 'var(--accent-crimson)',
-              padding: '0.75rem',
-              borderRadius: '8px',
-              fontSize: '0.85rem',
-              marginBottom: '1rem',
+              padding: '0.85rem 1rem',
+              borderRadius: '10px',
+              fontSize: '0.84rem',
+              marginBottom: '1.25rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
             }}
           >
-            {quoteError}
+            <span>⚠</span>
+            <span>{quoteError}</span>
           </div>
         )}
 
         {/* Action Button */}
         {!address ? (
           <button
+            onClick={openWalletModal}
             className="btn btn-primary"
-            style={{ width: '100%', padding: '0.85rem', fontSize: '1rem' }}
-            disabled
+            style={{
+              width: '100%',
+              padding: '0.95rem',
+              fontSize: '1rem',
+              borderRadius: '12px',
+            }}
           >
             Connect Wallet To Trade
           </button>
@@ -464,8 +540,9 @@ export function TradingCockpit() {
             className="btn btn-secondary"
             style={{
               width: '100%',
-              padding: '0.85rem',
+              padding: '0.95rem',
               fontSize: '1rem',
+              borderRadius: '12px',
               borderColor: 'var(--accent-amber)',
               color: 'var(--accent-amber)',
             }}
@@ -486,8 +563,9 @@ export function TradingCockpit() {
             className="btn btn-primary"
             style={{
               width: '100%',
-              padding: '0.85rem',
+              padding: '0.95rem',
               fontSize: '1rem',
+              borderRadius: '12px',
               opacity: isExecutionBlocked || !quote ? 0.6 : 1,
             }}
           >
@@ -505,11 +583,11 @@ export function TradingCockpit() {
         {txStatus !== 'idle' && (
           <div
             style={{
-              marginTop: '1rem',
-              padding: '0.85rem',
-              borderRadius: '8px',
-              background: 'var(--surface-overlay)',
-              border: '1px solid var(--border-subtle)',
+              marginTop: '1.25rem',
+              padding: '1rem',
+              borderRadius: '12px',
+              background: 'rgba(255, 255, 255, 0.03)',
+              border: '1px solid var(--border-default)',
             }}
           >
             <div
@@ -517,10 +595,10 @@ export function TradingCockpit() {
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                marginBottom: '0.5rem',
+                marginBottom: '0.6rem',
               }}
             >
-              <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>Transaction Lifecycle</span>
+              <span style={{ fontSize: '0.82rem', fontWeight: 600 }}>Transaction Lifecycle</span>
               <span
                 className={`badge ${
                   txStatus === 'submitted'
@@ -528,9 +606,9 @@ export function TradingCockpit() {
                     : txStatus === 'confirmed'
                     ? 'badge-confirmed'
                     : txStatus === 'finalized'
-                    ? 'badge-finalized'
+                    ? 'badge-confirmed'
                     : txStatus === 'failed'
-                    ? 'badge-failed'
+                    ? 'badge-high'
                     : 'badge-submitted'
                 }`}
               >
@@ -539,7 +617,7 @@ export function TradingCockpit() {
             </div>
 
             {/* Stepper bar */}
-            <div style={{ display: 'flex', gap: '4px', height: '4px', marginBottom: '0.6rem' }}>
+            <div style={{ display: 'flex', gap: '6px', height: '4px', marginBottom: '0.75rem' }}>
               <div
                 style={{
                   flex: 1,
@@ -564,7 +642,7 @@ export function TradingCockpit() {
                 style={{
                   flex: 1,
                   background:
-                    txStatus === 'finalized' ? 'var(--accent-purple)' : 'var(--border-subtle)',
+                    txStatus === 'finalized' ? 'var(--accent-cyber)' : 'var(--border-subtle)',
                   borderRadius: '2px',
                 }}
               />
@@ -603,7 +681,7 @@ export function TradingCockpit() {
                 style={{
                   fontSize: '0.75rem',
                   color: 'var(--accent-crimson)',
-                  marginTop: '0.4rem',
+                  marginTop: '0.5rem',
                 }}
               >
                 {executionError}

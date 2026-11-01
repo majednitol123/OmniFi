@@ -8,7 +8,7 @@ import { apiClient } from '../../../lib/api';
 import { executeEvmTransaction, executeSolanaTransaction, TxStatus } from '../../../lib/tx-executor';
 
 export default function RemoveLiquidityPage() {
-  const { address, selectedNetworkId, isNetworkMismatch } = useWallet();
+  const { address, selectedNetworkId, isNetworkMismatch, openWalletModal } = useWallet();
 
   const [pools, setPools] = useState<readonly PoolSummary[]>([]);
   const [selectedPoolId, setSelectedPoolId] = useState<string>('');
@@ -35,7 +35,10 @@ export default function RemoveLiquidityPage() {
   }, [selectedNetworkId]);
 
   const handleRemoveLiquidity = async () => {
-    if (!address) return;
+    if (!address) {
+      openWalletModal();
+      return;
+    }
     setError(null);
     setTxStatus('preparing');
 
@@ -88,17 +91,17 @@ export default function RemoveLiquidityPage() {
   };
 
   return (
-    <div style={{ maxWidth: '580px', margin: '2rem auto', padding: '0 1rem' }}>
+    <div style={{ maxWidth: '600px', margin: '2rem auto', padding: '0 1rem' }}>
       <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <h1 style={{ fontSize: '1.75rem', fontWeight: 800, margin: '0 0 0.4rem 0' }}>
+          <h1 style={{ fontSize: '1.85rem', fontWeight: 800, margin: '0 0 0.4rem 0', letterSpacing: '-0.02em' }}>
             Remove Liquidity
           </h1>
-          <p style={{ color: 'var(--text-secondary)', margin: 0, fontSize: '0.9rem' }}>
+          <p style={{ color: 'var(--text-secondary)', margin: 0, fontSize: '0.92rem' }}>
             Burn pool shares to reclaim underlying token assets
           </p>
         </div>
-        <Link href="/pools" className="btn btn-secondary font-mono" style={{ textDecoration: 'none' }}>
+        <Link href="/pools" className="btn btn-secondary font-mono" style={{ textDecoration: 'none', borderRadius: '8px' }}>
           ← View Pools
         </Link>
       </div>
@@ -106,7 +109,7 @@ export default function RemoveLiquidityPage() {
       <div className="card">
         {/* Pool Selector */}
         <div style={{ marginBottom: '1.25rem' }}>
-          <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.4rem' }}>
+          <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>
             Select Active Pool
           </label>
           <select
@@ -124,19 +127,19 @@ export default function RemoveLiquidityPage() {
 
         {/* Percentage Selector */}
         <div style={{ marginBottom: '1.5rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.6rem' }}>
             <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>Amount to Withdraw</span>
-            <span className="font-mono" style={{ color: 'var(--accent-cyber)', fontWeight: 700 }}>
+            <span className="font-mono" style={{ color: 'var(--accent-cyber)', fontWeight: 800, fontSize: '1rem' }}>
               {percent}%
             </span>
           </div>
 
-          <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+          <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.25rem' }}>
             {[25, 50, 75, 100].map((p) => (
               <button
                 key={p}
                 className={`btn ${percent === p ? 'btn-primary' : 'btn-secondary'} font-mono`}
-                style={{ flex: 1, padding: '0.4rem' }}
+                style={{ flex: 1, padding: '0.55rem', borderRadius: '8px', fontSize: '0.85rem' }}
                 onClick={() => {
                   setPercent(p);
                   setLiquidityAmount((p * 100000).toString());
@@ -147,26 +150,43 @@ export default function RemoveLiquidityPage() {
             ))}
           </div>
 
-          <div style={{ background: 'var(--surface-overlay)', padding: '1rem', borderRadius: '8px' }}>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>
-              Raw LP Units
+          <div style={{ background: 'rgba(255, 255, 255, 0.025)', padding: '1.1rem 1.25rem', borderRadius: '12px', border: '1px solid var(--border-default)' }}>
+            <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>
+              Raw LP Units (Calculated from Share)
             </div>
             <input
               type="text"
-              className="input-field font-mono"
+              className="font-mono"
               value={liquidityAmount}
               onChange={(e) => setLiquidityAmount(e.target.value)}
+              style={{
+                fontSize: '1.25rem',
+                fontWeight: 700,
+                border: 'none',
+                background: 'transparent',
+                color: '#fff',
+                width: '100%',
+                outline: 'none',
+              }}
             />
           </div>
         </div>
 
         {/* Submit */}
         {!address ? (
-          <button className="btn btn-primary" style={{ width: '100%', padding: '0.85rem' }} disabled>
+          <button
+            onClick={openWalletModal}
+            className="btn btn-primary"
+            style={{ width: '100%', padding: '0.95rem', borderRadius: '12px', fontSize: '0.95rem' }}
+          >
             Connect Wallet To Withdraw
           </button>
         ) : isNetworkMismatch ? (
-          <button className="btn btn-secondary" style={{ width: '100%', padding: '0.85rem', color: 'var(--accent-amber)' }} disabled>
+          <button
+            className="btn btn-secondary"
+            style={{ width: '100%', padding: '0.95rem', borderRadius: '12px', color: 'var(--accent-amber)', borderColor: 'var(--accent-amber)' }}
+            disabled
+          >
             Network Mismatch Detected
           </button>
         ) : (
@@ -174,7 +194,7 @@ export default function RemoveLiquidityPage() {
             onClick={handleRemoveLiquidity}
             disabled={txStatus === 'preparing' || txStatus === 'submitting'}
             className="btn btn-primary font-mono"
-            style={{ width: '100%', padding: '0.85rem' }}
+            style={{ width: '100%', padding: '0.95rem', borderRadius: '12px', fontSize: '0.95rem' }}
           >
             {txStatus === 'preparing'
               ? 'Preparing Unsigned Payload...'
@@ -188,15 +208,15 @@ export default function RemoveLiquidityPage() {
         {txStatus !== 'idle' && (
           <div
             style={{
-              marginTop: '1rem',
-              padding: '0.85rem',
-              borderRadius: '8px',
-              background: 'var(--surface-overlay)',
-              border: '1px solid var(--border-subtle)',
+              marginTop: '1.25rem',
+              padding: '1rem',
+              borderRadius: '12px',
+              background: 'rgba(255, 255, 255, 0.03)',
+              border: '1px solid var(--border-default)',
             }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-              <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>Unwind Lifecycle</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+              <span style={{ fontSize: '0.82rem', fontWeight: 600 }}>Unwind Lifecycle</span>
               <span className={`badge badge-${txStatus}`}>{txStatus.toUpperCase()}</span>
             </div>
 
@@ -207,7 +227,7 @@ export default function RemoveLiquidityPage() {
             )}
 
             {error && (
-              <div style={{ color: 'var(--accent-crimson)', fontSize: '0.75rem', marginTop: '0.4rem' }}>
+              <div style={{ color: 'var(--accent-crimson)', fontSize: '0.78rem', marginTop: '0.5rem' }}>
                 {error}
               </div>
             )}

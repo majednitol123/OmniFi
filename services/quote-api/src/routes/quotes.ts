@@ -1,9 +1,7 @@
 import { parseAssetRef } from '@omnifi/domain';
 import { findBestQuote, findRoutes, PoolGraph } from '@omnifi/quote-engine';
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import { z } from 'zod';
 import { sendProblemDetails } from '../errors/problem-details';
-import { QuoteQuerySchema } from '../validation/schemas';
 import { quoteLatencySeconds, quoteRequestsTotal } from '../metrics';
 
 function serializeBigInts(obj: any): any {
@@ -26,40 +24,55 @@ function serializeBigInts(obj: any): any {
   return obj;
 }
 
-const PostQuoteBodySchema = z.object({
-  tokenIn: z.string(),
-  tokenOut: z.string(),
-  amount: z.string(),
-  exactIn: z.boolean().default(true),
-  allowSplits: z.boolean().default(false),
-});
-
 export function registerQuoteRoutes(fastify: FastifyInstance, graph: PoolGraph) {
-  // GET /api/v1/quotes
-  fastify.get('/api/v1/quotes', async (request: FastifyRequest, reply: FastifyReply) => {
+  const resolveAssetRef = (raw: string) => {
+    if (!raw) return null;
+    if (raw.includes(':')) {
+      const parsed = parseAssetRef(raw);
+      if (parsed) return parsed;
+    }
+    // If pure address or symbol, search pool graph tokens
+    for (const p of graph.allPools()) {
+      if (p.token0.address.toLowerCase() === raw.toLowerCase()) return p.token0;
+      if (p.token1.address.toLowerCase() === raw.toLowerCase()) return p.token1;
+    }
+    return null;
+  };
+
+  const handleUnifiedQuote = async (request: FastifyRequest, reply: FastifyReply) => {
     const start = performance.now();
-    const parseResult = QuoteQuerySchema.safeParse(request.query);
-    if (!parseResult.success) {
+    const query = (request.query || {}) as Record<string, any>;
+    const body = (request.body || {}) as Record<string, any>;
+
+    const rawTokenIn = (body.tokenIn || body.sourceToken || query.tokenIn || query.sourceToken || '') as string;
+    const rawTokenOut = (body.tokenOut || body.targetToken || query.tokenOut || query.targetToken || '') as string;
+    const rawAmount = (body.amount || body.amountIn || query.amount || query.amountIn || '') as string;
+    const allowSplits = body.allowSplits === true || query.allowSplits === 'true' || query.allowSplits === true;
+
+    if (!rawTokenIn || !rawTokenOut || !rawAmount) {
       quoteRequestsTotal.inc({ status: 'bad_request' });
-      const invalidParams = parseResult.error.errors.map((e) => ({
-        name: e.path.join('.'),
-        reason: e.message,
-      }));
       return sendProblemDetails(
         reply,
         400,
         'Invalid Request Parameters',
-        'One or more query parameters failed validation.',
+        'Required parameters missing: tokenIn (or sourceToken), tokenOut (or targetToken), and amount (or amountIn).',
         request.url,
-        invalidParams,
       );
     }
 
-    const { tokenIn: rawTokenIn, tokenOut: rawTokenOut, amountIn: rawAmountIn, allowSplits } =
-      parseResult.data;
+    const tokenIn = resolveAssetRef(rawTokenIn);
+    const tokenOut = resolveAssetRef(rawTokenOut);
 
-    const tokenIn = parseAssetRef(rawTokenIn)!;
-    const tokenOut = parseAssetRef(rawTokenOut)!;
+    if (!tokenIn || !tokenOut) {
+      quoteRequestsTotal.inc({ status: 'token_not_found' });
+      return sendProblemDetails(
+        reply,
+        404,
+        'Asset Not Found',
+        `Could not resolve asset metadata for "${rawTokenIn}" or "${rawTokenOut}".`,
+        request.url,
+      );
+    }
 
     if (tokenIn.namespace !== tokenOut.namespace) {
       quoteRequestsTotal.inc({ status: 'cross_chain_unsupported' });
@@ -72,83 +85,21 @@ export function registerQuoteRoutes(fastify: FastifyInstance, graph: PoolGraph) 
       );
     }
 
-    const amountIn = BigInt(rawAmountIn);
-    const candidatePaths = findRoutes(graph, tokenIn, tokenOut, { maxHops: 3, maxPaths: 20 });
-    if (candidatePaths.length === 0) {
-      quoteRequestsTotal.inc({ status: 'no_route' });
-      return sendProblemDetails(
-        reply,
-        404,
-        'No Liquidity Route Found',
-        `No connected liquidity pool route exists between ${rawTokenIn} and ${rawTokenOut}.`,
-        request.url,
-      );
-    }
-
-    const quote = findBestQuote(candidatePaths, tokenIn, tokenOut, amountIn, { allowSplits });
-    if (!quote) {
-      quoteRequestsTotal.inc({ status: 'insufficient_liquidity' });
-      return sendProblemDetails(
-        reply,
-        422,
-        'Insufficient Liquidity',
-        'Available liquidity along discovered routes is insufficient to fulfill the requested amount.',
-        request.url,
-      );
-    }
-
-    const duration = (performance.now() - start) / 1000;
-    quoteLatencySeconds.observe(duration);
-    quoteRequestsTotal.inc({ status: 'success' });
-
-    return reply.status(200).send(serializeBigInts(quote));
-  });
-
-  // POST /quote and POST /api/v1/quote
-  const handlePostQuote = async (request: FastifyRequest, reply: FastifyReply) => {
-    const start = performance.now();
-    const parseResult = PostQuoteBodySchema.safeParse(request.body);
-    if (!parseResult.success) {
+    let amountIn: bigint;
+    try {
+      amountIn = BigInt(rawAmount);
+      if (amountIn <= 0n) throw new Error('Amount must be positive');
+    } catch {
       quoteRequestsTotal.inc({ status: 'bad_request' });
       return sendProblemDetails(
         reply,
         400,
-        'Invalid Request Body',
-        parseResult.error.errors.map((e) => `${e.path.join('.')}: ${e.message}`).join(', '),
+        'Invalid Amount',
+        `Amount "${rawAmount}" is not a valid positive integer string.`,
         request.url,
       );
     }
 
-    const { tokenIn: rawTokenIn, tokenOut: rawTokenOut, amount: rawAmount, allowSplits } = parseResult.data;
-
-    // Helper to normalize address to AssetRef
-    const resolveAssetRef = (raw: string) => {
-      if (raw.includes(':')) {
-        return parseAssetRef(raw);
-      }
-      // If pure address, search pool graph tokens
-      for (const p of graph.allPools()) {
-        if (p.token0.address.toLowerCase() === raw.toLowerCase()) return p.token0;
-        if (p.token1.address.toLowerCase() === raw.toLowerCase()) return p.token1;
-      }
-      return null;
-    };
-
-    const tokenIn = resolveAssetRef(rawTokenIn);
-    const tokenOut = resolveAssetRef(rawTokenOut);
-
-    if (!tokenIn || !tokenOut) {
-      quoteRequestsTotal.inc({ status: 'token_not_found' });
-      return sendProblemDetails(
-        reply,
-        404,
-        'Asset Not Found',
-        `Could not resolve asset metadata for ${rawTokenIn} or ${rawTokenOut}.`,
-        request.url,
-      );
-    }
-
-    const amountIn = BigInt(rawAmount);
     const candidatePaths = findRoutes(graph, tokenIn, tokenOut, { maxHops: 3, maxPaths: 20 });
     if (candidatePaths.length === 0) {
       quoteRequestsTotal.inc({ status: 'no_route' });
@@ -189,6 +140,14 @@ export function registerQuoteRoutes(fastify: FastifyInstance, graph: PoolGraph) 
     });
   };
 
-  fastify.post('/quote', handlePostQuote);
-  fastify.post('/api/v1/quote', handlePostQuote);
+  // Register GET and POST variants for maximum client compatibility
+  fastify.get('/quote', handleUnifiedQuote);
+  fastify.get('/quotes', handleUnifiedQuote);
+  fastify.get('/api/v1/quote', handleUnifiedQuote);
+  fastify.get('/api/v1/quotes', handleUnifiedQuote);
+
+  fastify.post('/quote', handleUnifiedQuote);
+  fastify.post('/quotes', handleUnifiedQuote);
+  fastify.post('/api/v1/quote', handleUnifiedQuote);
+  fastify.post('/api/v1/quotes', handleUnifiedQuote);
 }
