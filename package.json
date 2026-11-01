@@ -1,0 +1,21 @@
+{
+  "name": "omnifi",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Non-custodial multi-chain DEX with independently engineered EVM and Solana implementations",
+  "license": "SEE LICENSE",
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "packageManager": "pnpm@9.15.4",
+  "scripts": {
+    "clean": "pnpm -r run clean",
+    "build": "pnpm -r run build",
+    "test": "pnpm -r run test",
+    "lint": "pnpm -r run lint",
+    "format": "pnpm -r run format",
+    "typecheck": "pnpm -r run typecheck"
+  }
+}
+
