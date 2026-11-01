@@ -1,0 +1,35 @@
+title = "OmniFi Gitleaks Configuration"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Global allowlist for public mock data and test vectors"
+paths = [
+  '''packages/test-vectors/.*''',
+  '''\.gitleaks\.toml''',
+  '''package-lock\.json''',
+  '''pnpm-lock\.yaml''',
+]
+
+[[rules]]
+id = "evm-private-key"
+description = "EVM Private Key (64 hex characters)"
+regex = '''(?i)(?:private[_-]?key|secret[_-]?key|deployer[_-]?key)\s*[:=]\s*["']?(?:0x)?[0-9a-f]{64}["']?'''
+secretGroup = 0
+keywords = ["private_key", "secret_key", "deployer_key"]
+
+[[rules]]
+id = "solana-base58-keypair"
+description = "Solana Base58 Keypair Pattern"
+regex = '''(?i)(?:solana[_-]?private[_-]?key|solana[_-]?secret)\s*[:=]\s*["']?[1-9A-HJ-NP-Za-km-z]{87,88}["']?'''
+secretGroup = 0
+keywords = ["solana_private_key", "solana_secret"]
+
+[[rules]]
+id = "mnemonic-seed-phrase"
+description = "BIP-39 Mnemonic Seed Phrase Pattern"
+regex = '''(?i)(?:mnemonic|seed[_-]?phrase)\s*[:=]\s*["'][a-z]+(\s+[a-z]+){11,23}["']'''
+secretGroup = 0
+keywords = ["mnemonic", "seed_phrase"]
+

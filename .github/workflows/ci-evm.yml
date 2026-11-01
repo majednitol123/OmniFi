@@ -1,0 +1,44 @@
+name: CI - EVM Contracts
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    paths:
+      - 'chains/evm/**'
+      - '.github/workflows/ci-evm.yml'
+
+jobs:
+  forge:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: Check Formatting
+        run: |
+          cd chains/evm
+          forge fmt --check
+
+      - name: Build Contracts
+        run: |
+          cd chains/evm
+          forge build --sizes
+
+      - name: Run Tests
+        run: |
+          cd chains/evm
+          forge test -vvv
+
+      - name: Run CI Fuzz Tests
+        run: |
+          cd chains/evm
+          FOUNDRY_PROFILE=ci forge test --match-test "testFuzz" -vvv
+

@@ -10,12 +10,21 @@
   },
   "packageManager": "pnpm@9.15.4",
   "scripts": {
-    "clean": "pnpm -r run clean",
-    "build": "pnpm -r run build",
-    "test": "pnpm -r run test",
-    "lint": "pnpm -r run lint",
-    "format": "pnpm -r run format",
-    "typecheck": "pnpm -r run typecheck"
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "format": "prettier --write \"**/*.{ts,tsx,js,json,md,yml,yaml}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,json,md,yml,yaml}\"",
+    "clean": "turbo run clean && rm -rf node_modules",
+    "test:evm": "cd chains/evm && forge test",
+    "test:solana": "cd chains/solana && cargo test",
+    "test:all": "pnpm test && pnpm test:evm && pnpm test:solana"
+  },
+  "devDependencies": {
+    "turbo": "^2.3.3",
+    "prettier": "^3.4.2",
+    "eslint": "^8.57.1",
+    "typescript": "^5.7.3"
   }
 }
-
