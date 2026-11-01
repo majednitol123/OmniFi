@@ -330,3 +330,4 @@ interface IDynamicFeeHook {
 | **INV-V4-3: Solvency Conservation** | Total pool vault balance $\ge \sum \text{Reserves} + \sum \text{ProtocolFees}$. | Differential Testing vs CLMM |
 | **INV-V4-4: Transient Purity** | All transient slots zeroed post-transaction. | Post-call slot assertions |
 | **INV-V4-5: Canonical Identity** | Unique `PoolId` per sorted pair and fee tier. | Cryptographic collision unit tests |
+

@@ -43,3 +43,4 @@ export interface SwapQuoteResult {
   protocolFeeAmount: bigint;
   priceImpactBps: number;
 }
+

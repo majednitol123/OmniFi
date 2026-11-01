@@ -9,3 +9,4 @@ interface IUnlockCallback {
     /// @return result Any data the caller wants to return from unlock
     function unlockCallback(bytes calldata data) external returns (bytes memory result);
 }
+

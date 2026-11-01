@@ -162,3 +162,4 @@ contract OmniFiPoolManagerTest is Test {
         assertEq(protocolFee, 100_000);
     }
 }
+

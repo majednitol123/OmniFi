@@ -42,3 +42,4 @@ module.exports = async function (provider: anchor.AnchorProvider) {
     console.error('Error during migration deployment:', err);
   }
 };
+

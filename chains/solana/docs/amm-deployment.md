@@ -86,3 +86,4 @@ anchor migrate
 3. **Truncating Output:** Output amounts are rounded down to guarantee pool solvency.
 4. **Permanent Liquidity Lock:** The first depositor has $1000$ base units (`MINIMUM_LIQUIDITY`) permanently locked to prevent share inflation attacks.
 5. **No Key-Custody Risk:** User funds never enter unverified custody. Vaults are held exclusively by the programmatic `Pool Authority PDA`.
+

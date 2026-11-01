@@ -12,3 +12,4 @@ struct PoolKey {
     int24 tickSpacing;
     address hooks;
 }
+

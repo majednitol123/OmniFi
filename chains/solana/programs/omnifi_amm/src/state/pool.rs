@@ -19,3 +19,4 @@ pub struct PoolState {
     pub authority_bump: u8,
     pub is_paused: bool,
 }
+

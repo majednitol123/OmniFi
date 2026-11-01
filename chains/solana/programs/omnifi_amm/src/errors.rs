@@ -50,3 +50,4 @@ pub enum ErrorCode {
     #[msg("Unsupported token program provided")]
     InvalidTokenProgram,
 }
+

@@ -14,3 +14,4 @@ export const FEE_DENOMINATOR = 1_000_000n;
 
 export const ALLOWED_FEE_TIERS = [100, 500, 3000, 10000] as const;
 export type FeeTier = (typeof ALLOWED_FEE_TIERS)[number];
+

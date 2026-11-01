@@ -9,3 +9,4 @@ pub struct GlobalConfig {
     pub emergency_paused: bool,
     pub bump: u8,
 }
+

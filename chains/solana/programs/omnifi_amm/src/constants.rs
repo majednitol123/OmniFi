@@ -10,3 +10,4 @@ pub const FEE_DENOMINATOR: u64 = 1_000_000; // 1e6 hundredths of a bip
 pub const ALLOWED_FEE_TIERS: [u32; 4] = [100, 500, 3000, 10000];
 
 pub const MAX_PROTOCOL_FEE_RATE: u32 = 250_000; // Max 25% of swap fee (250,000 / 1,000,000)
+
