@@ -82,9 +82,9 @@ export function TradingCockpit() {
       setQuote(resp);
     } catch (err: any) {
       setQuote(null);
-      const raw = err?.message || '';
-      if (raw.includes('Route GET:') || raw.includes('Route POST:') || raw.includes('404')) {
-        setQuoteError('Routing calculation in progress... please adjust amount or asset');
+      const raw = err?.userMessage || err?.message || '';
+      if (raw.includes('Route GET:') || raw.includes('Route POST:') || raw.includes('404') || raw === 'API request failed') {
+        setQuoteError('No direct liquidity route found for this amount. Try adjusting the size or asset.');
       } else {
         setQuoteError(raw || 'No liquidity route available for this pair');
       }

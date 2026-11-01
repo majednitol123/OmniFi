@@ -7,6 +7,21 @@ interface PoolReservesState {
   [key: string]: unknown;
 }
 
+function estimateReserveUsd(reserve: bigint | string | undefined): bigint {
+  if (!reserve) return 15_000_000n;
+  const val = typeof reserve === 'bigint' ? reserve : BigInt(reserve.toString());
+  // If > 1e16 (likely 18 decimals, e.g. WETH in wei: 25,000 ETH * 1e18)
+  if (val > 10_000_000_000_000_000n) {
+    const ethCount = val / 1_000_000_000_000_000_000n;
+    return ethCount > 0n ? ethCount * 2_500n : 25_000_000n;
+  }
+  // If > 1e6 (likely 6 decimals, e.g. USDC/USDT: 50,000,000 * 1e6)
+  if (val > 1_000_000n) {
+    return val / 1_000_000n;
+  }
+  return val;
+}
+
 export function registerAnalyticsRoutes(fastify: FastifyInstance, graph: PoolGraph): void {
   // GET /api/v1/analytics/overview
   fastify.get(
@@ -29,13 +44,14 @@ export function registerAnalyticsRoutes(fastify: FastifyInstance, graph: PoolGra
       let totalEstimatedVolume = 0n;
       for (const p of pools) {
         const state = p.state as PoolReservesState | undefined;
-        if (state?.reserve0 && state?.reserve1) {
-          const poolReserves = BigInt(state.reserve0.toString()) + BigInt(state.reserve1.toString());
-          totalTvl += poolReserves;
-          totalEstimatedVolume += poolReserves / 3n;
+        if (state?.reserve0 || state?.reserve1) {
+          const usd0 = estimateReserveUsd(state.reserve0);
+          const poolTvlUsd = usd0 * 2n;
+          totalTvl += poolTvlUsd;
+          totalEstimatedVolume += poolTvlUsd / 3n;
         } else {
-          totalTvl += 20_000_000n;
-          totalEstimatedVolume += 5_000_000n;
+          totalTvl += 30_000_000n;
+          totalEstimatedVolume += 10_000_000n;
         }
       }
 
@@ -65,18 +81,19 @@ export function registerAnalyticsRoutes(fastify: FastifyInstance, graph: PoolGra
       const { network, poolId } = request.params;
       const pool = graph.getPool(poolId);
 
-      let poolTvl = 15_000_000n;
+      let poolTvl = 25_000_000n;
       let feeTier = 3000;
 
       if (pool) {
         feeTier = pool.feeTier;
         const state = pool.state as PoolReservesState | undefined;
-        if (state?.reserve0 && state?.reserve1) {
-          poolTvl = BigInt(state.reserve0.toString()) + BigInt(state.reserve1.toString());
+        if (state?.reserve0 || state?.reserve1) {
+          const usd0 = estimateReserveUsd(state.reserve0);
+          poolTvl = usd0 * 2n;
         }
       }
 
-      const volume24h = poolTvl / 4n;
+      const volume24h = poolTvl / 3n;
       const fees24h = (volume24h * BigInt(feeTier)) / 1_000_000n;
       const feeApy = `${((feeTier * 365) / 100000).toFixed(1)}%`;
 

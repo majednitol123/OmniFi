@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { TokenResponse } from '@omnifi/api-client';
 
 export interface TokenSelectorModalProps {
@@ -19,8 +20,13 @@ export function TokenSelectorModal({
   onClose,
 }: TokenSelectorModalProps) {
   const [search, setSearch] = useState('');
+  const [mounted, setMounted] = useState(false);
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!isOpen || !mounted) return null;
 
   const filtered = tokens.filter((t) => {
     const q = search.toLowerCase();
@@ -31,11 +37,40 @@ export function TokenSelectorModal({
     );
   });
 
-  return (
-    <div className="modal-overlay" onClick={onClose}>
+  const modalElement = (
+    <div
+      className="modal-overlay"
+      onClick={onClose}
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        width: '100vw',
+        height: '100vh',
+        background: 'rgba(4, 6, 9, 0.82)',
+        backdropFilter: 'blur(8px)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 99999,
+        padding: '1.5rem',
+      }}
+    >
       <div
         className="modal-content"
-        style={{ padding: '1.5rem', width: '460px' }}
+        style={{
+          background: 'var(--bg-surface)',
+          border: '1px solid var(--border-default)',
+          borderRadius: '16px',
+          boxShadow: 'var(--shadow-modal)',
+          padding: '1.5rem',
+          width: '100%',
+          maxWidth: '460px',
+          margin: 'auto',
+          position: 'relative',
+        }}
         onClick={(e) => e.stopPropagation()}
       >
         <div
@@ -48,7 +83,7 @@ export function TokenSelectorModal({
         >
           <div>
             <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 800 }}>Select Asset</h3>
-            <p style={{ margin: '0.2rem 0 0', fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+            <p style={{ margin: '0.2rem 0 0', fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
               Verified tokens on the active network
             </p>
           </div>
@@ -215,4 +250,6 @@ export function TokenSelectorModal({
       </div>
     </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(modalElement, document.body) : null;
 }

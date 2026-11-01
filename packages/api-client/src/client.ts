@@ -155,12 +155,19 @@ export class OmniFiClient {
       const json = (await response.json()) as any;
 
       if (!response.ok) {
+        const errorMsg =
+          json?.detail ||
+          json?.message ||
+          json?.title ||
+          json?.error ||
+          (response.statusText ? `HTTP ${response.status}: ${response.statusText}` : 'API request failed');
+
         throw new OmniFiApiError(
-          json?.message || 'API request failed',
+          errorMsg,
           json?.code || ErrorCode.INTERNAL_ERROR,
           response.status,
           json?.details,
-          json?.userMessage,
+          json?.userMessage || errorMsg,
         );
       }
 

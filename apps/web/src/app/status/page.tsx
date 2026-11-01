@@ -44,6 +44,24 @@ export default function StatusDashboardPage() {
     return <span className="badge badge-purple font-mono">Ethereum</span>;
   };
 
+  const formatUsdCompact = (val: any, fallback: string = '$0') => {
+    if (val === undefined || val === null || val === '') return fallback;
+    const num = typeof val === 'number' ? val : parseFloat(val.toString());
+    if (isNaN(num)) return fallback;
+    if (num >= 1e12) return `$${(num / 1e12).toFixed(2)}T`;
+    if (num >= 1e9) return `$${(num / 1e9).toFixed(2)}B`;
+    if (num >= 1e6) return `$${(num / 1e6).toFixed(2)}M`;
+    if (num >= 1e3) return `$${(num / 1e3).toFixed(2)}K`;
+    return `$${num.toLocaleString()}`;
+  };
+
+  const formatUsdFull = (val: any, fallback: string = '$0') => {
+    if (val === undefined || val === null || val === '') return fallback;
+    const num = typeof val === 'number' ? val : parseFloat(val.toString());
+    if (isNaN(num)) return fallback;
+    return `$${num.toLocaleString()}`;
+  };
+
   return (
     <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '2rem 1.5rem' }}>
       <div
@@ -125,26 +143,26 @@ export default function StatusDashboardPage() {
           marginBottom: '2.5rem',
         }}
       >
-        <div className="stat-card">
+        <div className="stat-card" title={formatUsdFull(analytics?.totalTvlUsd, '$150,000,000')}>
           <div className="stat-label">Total Value Locked (USD)</div>
           <div className="stat-value" style={{ color: 'var(--accent-cyber)' }}>
-            ${analytics?.totalTvlUsd ? Number(analytics.totalTvlUsd).toLocaleString() : '150,000,000'}
+            {formatUsdCompact(analytics?.totalTvlUsd, '$150.00M')}
           </div>
           <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Aggregate multi-chain depth</div>
         </div>
 
-        <div className="stat-card">
+        <div className="stat-card" title={formatUsdFull(analytics?.totalVolume24hUsd, '$45,000,000')}>
           <div className="stat-label">24h Total Volume (USD)</div>
           <div className="stat-value">
-            ${analytics?.totalVolume24hUsd ? Number(analytics.totalVolume24hUsd).toLocaleString() : '45,000,000'}
+            {formatUsdCompact(analytics?.totalVolume24hUsd, '$45.00M')}
           </div>
           <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Trading turnover past 24 hours</div>
         </div>
 
-        <div className="stat-card">
+        <div className="stat-card" title={formatUsdFull(analytics?.totalFees24hUsd, '$135,000')}>
           <div className="stat-label">24h Fees Accrued (USD)</div>
           <div className="stat-value" style={{ color: 'var(--accent-cyber)' }}>
-            ${analytics?.totalFees24hUsd ? Number(analytics.totalFees24hUsd).toLocaleString() : '135,000'}
+            {formatUsdCompact(analytics?.totalFees24hUsd, '$135.00K')}
           </div>
           <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Distributed to liquidity providers</div>
         </div>
@@ -152,7 +170,7 @@ export default function StatusDashboardPage() {
         <div className="stat-card">
           <div className="stat-label">Active Verified Pools</div>
           <div className="stat-value" style={{ color: 'var(--accent-blue)' }}>
-            {analytics?.totalPools ?? 12}
+            {analytics?.totalPools ?? 6}
           </div>
           <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Ethereum, Base, and Solana</div>
         </div>

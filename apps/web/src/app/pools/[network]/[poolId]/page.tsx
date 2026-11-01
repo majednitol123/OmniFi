@@ -74,6 +74,24 @@ export default function PoolInspectorPage() {
   const token0Addr = typeof pool.token0 === 'string' ? pool.token0 : pool.token0?.address || 'N/A';
   const token1Addr = typeof pool.token1 === 'string' ? pool.token1 : pool.token1?.address || 'N/A';
 
+  const formatUsdCompact = (val: any, fallback: string = '$0') => {
+    if (val === undefined || val === null || val === '') return fallback;
+    const num = typeof val === 'number' ? val : parseFloat(val.toString());
+    if (isNaN(num)) return fallback;
+    if (num >= 1e12) return `$${(num / 1e12).toFixed(2)}T`;
+    if (num >= 1e9) return `$${(num / 1e9).toFixed(2)}B`;
+    if (num >= 1e6) return `$${(num / 1e6).toFixed(2)}M`;
+    if (num >= 1e3) return `$${(num / 1e3).toFixed(2)}K`;
+    return `$${num.toLocaleString()}`;
+  };
+
+  const formatUsdFull = (val: any, fallback: string = '$0') => {
+    if (val === undefined || val === null || val === '') return fallback;
+    const num = typeof val === 'number' ? val : parseFloat(val.toString());
+    if (isNaN(num)) return fallback;
+    return `$${num.toLocaleString()}`;
+  };
+
   return (
     <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '2rem 1.5rem' }}>
       {/* Top Breadcrumb & Action */}
@@ -125,17 +143,17 @@ export default function PoolInspectorPage() {
           marginBottom: '2rem',
         }}
       >
-        <div className="stat-card">
+        <div className="stat-card" title={formatUsdFull(analytics?.tvlUsd, '$12,500,000')}>
           <div className="stat-label">Total Value Locked (TVL)</div>
           <div className="stat-value" style={{ color: 'var(--accent-cyber)' }}>
-            ${analytics?.tvlUsd ? Number(analytics.tvlUsd).toLocaleString() : '12,500,000'}
+            {formatUsdCompact(analytics?.tvlUsd, '$12.50M')}
           </div>
         </div>
 
-        <div className="stat-card">
+        <div className="stat-card" title={formatUsdFull(analytics?.volume24hUsd, '$3,800,000')}>
           <div className="stat-label">24h Trading Volume</div>
           <div className="stat-value">
-            ${analytics?.volume24hUsd ? Number(analytics.volume24hUsd).toLocaleString() : '3,800,000'}
+            {formatUsdCompact(analytics?.volume24hUsd, '$3.80M')}
           </div>
         </div>
 
