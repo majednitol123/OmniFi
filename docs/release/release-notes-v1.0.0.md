@@ -91,3 +91,4 @@ OmniFi Release 1.0.0 establishes an institutional-grade, non-custodial decentral
 - **Secondary On-Call SRE:** SRE Rotation Beta (`ops-beta@omnifi.internal`)
 - **Security Escalation Lead:** OmniFi Core Security (`security@omnifi.internal`)
 - **Incident Room:** `#incident-room-sev1` (Slack) / `https://status.omnifi.exchange`
+

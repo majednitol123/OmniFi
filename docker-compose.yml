@@ -1,14 +1,12 @@
-version: '3.8'
-
 services:
   anvil:
-    image: ghcr.io/foundry-rs/foundry:latest
+    image: trufflesuite/ganache:latest
     container_name: omnifi-anvil
     ports:
       - '8545:8545'
-    command: anvil --host 0.0.0.0 --port 8545 --block-time 2 --chain-id 31337
+    command: ["--chain.chainId=31337", "--server.host=0.0.0.0", "--server.port=8545"]
     healthcheck:
-      test: ['CMD-SHELL', 'nc -z 127.0.0.1 8545 || exit 1']
+      test: ['CMD', 'node', '-e', 'require("http").get("http://localhost:8545", (r) => process.exit(0)).on("error", () => process.exit(1))']
       interval: 5s
       timeout: 3s
       retries: 5
@@ -47,6 +45,7 @@ services:
     build:
       context: .
       dockerfile: services/quote-api/Dockerfile
+    image: omnifi-quote-api:latest
     container_name: omnifi-quote-api
     ports:
       - '3001:3001'
@@ -88,7 +87,7 @@ services:
     image: grafana/grafana:10.3.3
     container_name: omnifi-grafana
     ports:
-      - '3000:3000'
+      - '3002:3000'
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
@@ -98,6 +97,22 @@ services:
       - grafanadata:/var/lib/grafana
     depends_on:
       - prometheus
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    image: omnifi-web:latest
+    container_name: omnifi-web
+    ports:
+      - '3000:3000'
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - HOST=0.0.0.0
+      - NEXT_PUBLIC_API_URL=http://localhost:3001
+    depends_on:
+      - quote-api
 
 volumes:
   pgdata:

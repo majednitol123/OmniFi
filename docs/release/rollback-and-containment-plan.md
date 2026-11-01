@@ -88,3 +88,4 @@ During any Level 2, 3, or 4 incident:
 ## 4. Rollback Plan Verification
 
 This containment and rollback plan has been verified via chaos engineering rehearsals (`scripts/chaos-rehearsal.sh`) and simulated multisig pause drills (`test/v2/OmniFiV2Pair.t.sol`).
+

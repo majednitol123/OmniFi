@@ -111,3 +111,4 @@ The undersigned authorities, representing Protocol Architecture, Core Security, 
 | Governance & Multisig Board  OmniFi Safe/Squads Trustee  2026-11-01   APPROVED & AUTHORIZED        |
 +====================================================================================================+
 ```
+
