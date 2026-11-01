@@ -55,3 +55,4 @@ groups:
           summary: "Quote calculation 95th percentile latency exceeds 250ms"
           description: "Dijkstra graph traversal and optimal path evaluation latency has degraded."
           runbook_url: "https://docs.omnifi.finance/runbooks/RB-004-rpc-failover.md"
+

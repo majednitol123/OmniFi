@@ -53,3 +53,4 @@ Compare on-chain ERC20/SPL vault balance with indexed database record in `pool_r
 3. Compute exact delta between deposits, withdrawals, swaps, and fee earnings.
 4. Prepare compensating transaction through Multi-Sig if divergence was caused by non-standard fee-on-transfer mechanics or rounding discrepancy.
 5. Re-enable pool once invariant is mathematically proven and balanced.
+

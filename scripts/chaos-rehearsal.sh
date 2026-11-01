@@ -11,3 +11,4 @@ cd "${ROOT_DIR}"
 pnpm tsx "${ROOT_DIR}/scripts/chaos-rehearsal.ts"
 
 echo "Chaos engineering drills completed successfully."
+

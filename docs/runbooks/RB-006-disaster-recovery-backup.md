@@ -69,3 +69,4 @@ When recovering infrastructure from scratch, services MUST be started in strict 
 - [ ] Verify Prometheus is scraping `quote-api`: `http://localhost:9090/targets`
 - [ ] Run reconciliation check: `pnpm --filter @omnifi/reconciliation-worker check`
 - [ ] Perform smoke test swap simulation via `POST /api/v1/simulate`.
+

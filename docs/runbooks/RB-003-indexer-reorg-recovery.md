@@ -56,3 +56,4 @@ This triggers an atomic transaction:
 - [ ] Verify `omnifi_reorg_depth_blocks` has returned to `0`.
 - [ ] Confirm `select count(*) from pools where state is null` returns 0.
 - [ ] Execute test quote via `apiClient.getQuote(...)` to verify route graph validity.
+

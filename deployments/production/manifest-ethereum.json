@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "releaseVersion": "1.0.0",
+  "network": {
+    "namespace": "eip155",
+    "chainId": 1,
+    "name": "Ethereum Mainnet",
+    "nativeCurrency": {
+      "name": "Ether",
+      "symbol": "ETH",
+      "decimals": 18
+    },
+    "rpcUrls": [
+      "https://eth-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
+      "https://mainnet.infura.io/v3/${INFURA_API_KEY}",
+      "https://rpc.ankr.com/eth"
+    ],
+    "blockExplorerUrl": "https://etherscan.io"
+  },
+  "compiler": {
+    "solcVersion": "0.8.26",
+    "optimizer": {
+      "enabled": true,
+      "runs": 200
+    },
+    "evmVersion": "cancun",
+    "viaIR": false,
+    "metadataHash": "ipfs"
+  },
+  "contracts": {
+    "OmniFiV2Factory": {
+      "address": "0x1000000000000000000000000000000000000001",
+      "deployTx": "0xaa11000000000000000000000000000000000000000000000000000000000001",
+      "deploymentBlock": 21000000,
+      "adminOwner": "0x5afe000000000000000000000000000000000001",
+      "feeToSetter": "0x5afe000000000000000000000000000000000001",
+      "feeTo": "0x77ee000000000000000000000000000000000001",
+      "initCodeHash": "0x96e8ac4277198ff8b6f785478aa9a39f403cb768dd02cbee326c3e7da348845f"
+    },
+    "OmniFiV2Router": {
+      "address": "0x1000000000000000000000000000000000000002",
+      "deployTx": "0xaa11000000000000000000000000000000000000000000000000000000000002",
+      "deploymentBlock": 21000005,
+      "factory": "0x1000000000000000000000000000000000000001",
+      "weth": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+    },
+    "OmniFiCLMMFactory": {
+      "address": "0x1000000000000000000000000000000000000003",
+      "deployTx": "0xaa11000000000000000000000000000000000000000000000000000000000003",
+      "deploymentBlock": 21000010,
+      "owner": "0x5afe000000000000000000000000000000000001",
+      "feeRecipient": "0x77ee000000000000000000000000000000000001"
+    },
+    "OmniFiSwapRouter": {
+      "address": "0x1000000000000000000000000000000000000004",
+      "deployTx": "0xaa11000000000000000000000000000000000000000000000000000000000004",
+      "deploymentBlock": 21000015,
+      "factory": "0x1000000000000000000000000000000000000003",
+      "weth": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+    },
+    "OmniFiPoolManager": {
+      "address": "0x1000000000000000000000000000000000000005",
+      "deployTx": "0xaa11000000000000000000000000000000000000000000000000000000000005",
+      "deploymentBlock": 21000020,
+      "governance": "0x5afe000000000000000000000000000000000001",
+      "emergencySentinel": "0x5afe000000000000000000000000000000000002"
+    }
+  },
+  "governance": {
+    "type": "GnosisSafe_v1.4.1",
+    "address": "0x5afe000000000000000000000000000000000001",
+    "threshold": "2-of-4",
+    "timelockController": "0x713e000000000000000000000000000000000001",
+    "timelockMinDelaySeconds": 86400
+  }
+}

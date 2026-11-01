@@ -90,9 +90,9 @@ export async function buildServer(options: BuildServerOptions = {}): Promise<Fas
   registerNetworksRoutes(fastify);
   registerTokensRoutes(fastify);
   registerPoolsRoutes(fastify, graph);
-  registerPositionsRoutes(fastify);
+  registerPositionsRoutes(fastify, graph);
   registerPrepareRoutes(fastify);
-  registerAnalyticsRoutes(fastify);
+  registerAnalyticsRoutes(fastify, graph);
   registerQuoteRoutes(fastify, graph);
   registerRoutesDiscovery(fastify, graph);
   registerSimulateRoutes(fastify);

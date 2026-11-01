@@ -46,3 +46,4 @@ export function calculateBackoffWithJitter(
   const jitter = capped * jitterFactor * (Math.random() * 2 - 1); // +/- 20%
   return Math.max(10, Math.floor(capped + jitter));
 }
+

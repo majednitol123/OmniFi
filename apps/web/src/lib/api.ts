@@ -7,3 +7,4 @@ const API_BASE_URL =
 export const apiClient = new OmniFiClient({
   baseUrl: API_BASE_URL,
 });
+

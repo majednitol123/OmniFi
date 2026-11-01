@@ -19,3 +19,4 @@ COPY --from=builder /app /app
 
 EXPOSE 3001
 CMD ["node", "services/quote-api/dist/server.js"]
+

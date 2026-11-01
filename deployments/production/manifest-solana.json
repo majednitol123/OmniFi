@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "releaseVersion": "1.0.0",
+  "network": {
+    "namespace": "solana",
+    "cluster": "mainnet-beta",
+    "genesisHash": "5eykt4UsFv8P8NJdTREpY1vzqKqZKvdpKuc147dw2N9d",
+    "rpcUrls": [
+      "https://mainnet.helius-rpc.com/?api-key=${HELIUS_API_KEY}",
+      "https://api.mainnet-beta.solana.com",
+      "https://solana-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}"
+    ],
+    "blockExplorerUrl": "https://solscan.io"
+  },
+  "compiler": {
+    "anchorVersion": "0.30.1",
+    "rustcVersion": "1.81.0",
+    "solanaCliVersion": "1.18.26",
+    "reproducibleBuildContainer": "coralxyz/anchor:v0.30.1"
+  },
+  "programs": {
+    "omnifi_amm": {
+      "programId": "Ad85ZckvQezw7n3VjYqgoXYPyV5zCsTAzrG8qMhs6La3",
+      "binaryHashSha256": "8a34d0e6592289658bdcd830e61d8713ebf156d9d15024b4566c1b3f9ffc129e",
+      "upgradeAuthority": "SqdGov44444444444444444444444444444444444444",
+      "pdaAuthoritySeeds": ["omnifi_amm_auth"],
+      "tokenProgram": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+      "token2022Program": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+    },
+    "omnifi_clmm": {
+      "programId": "CLMM111111111111111111111111111111111111111",
+      "binaryHashSha256": "4b98cf34199aa123bde288127361ab892c902ffaa786c123455171728bbad109",
+      "upgradeAuthority": "SqdGov44444444444444444444444444444444444444",
+      "pdaAuthoritySeeds": ["omnifi_clmm_auth"],
+      "tokenProgram": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+      "token2022Program": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+    }
+  },
+  "governance": {
+    "type": "Squads_v4_Multisig",
+    "address": "SqdGov44444444444444444444444444444444444444",
+    "threshold": "2-of-4",
+    "members": [
+      "Omni111111111111111111111111111111111111111",
+      "Omni222222222222222222222222222222222222222",
+      "Omni333333333333333333333333333333333333333",
+      "Omni444444444444444444444444444444444444444"
+    ],
+    "timelockExecutionDelaySeconds": 86400
+  }
+}

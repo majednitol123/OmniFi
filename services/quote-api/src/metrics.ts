@@ -61,3 +61,4 @@ rpcProviderStatus.set({ provider: 'alchemy', network: 'eip155:1' }, 1);
 rpcProviderStatus.set({ provider: 'infura', network: 'eip155:1' }, 1);
 rpcProviderStatus.set({ provider: 'quicknode', network: 'eip155:8453' }, 1);
 rpcProviderStatus.set({ provider: 'helius', network: 'solana:mainnet-beta' }, 1);
+

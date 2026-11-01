@@ -53,3 +53,4 @@ This runbook governs the procedure for rotating signers, adding/removing keyhold
    ```
 2. Gather signatures from current signers.
 3. Execute proposal and verify updated vault member list via Solscan.
+

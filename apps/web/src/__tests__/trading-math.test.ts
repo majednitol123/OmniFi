@@ -42,3 +42,4 @@ describe('Trading Math & Non-Custodial Bounds', () => {
     expect(parseAmount('2.5', 18)).toBe(2_500_000_000_000_000_000n);
   });
 });
+

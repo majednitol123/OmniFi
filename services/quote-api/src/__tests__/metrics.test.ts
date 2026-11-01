@@ -62,3 +62,4 @@ describe('Metrics & Observability Integration Tests', () => {
     expect(metricsResp.body).toContain('omnifi_quote_latency_seconds');
   });
 });
+

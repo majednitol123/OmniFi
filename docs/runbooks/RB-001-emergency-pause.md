@@ -60,3 +60,4 @@ This runbook defines the authoritative operational protocol for executing an eme
 1. Root cause identified, fixed, and peer-reviewed by at least two independent auditors.
 2. Multi-sig initiates `unpause()` proposal subject to 24-hour Timelock (unless immediate override authorized).
 3. Monitor transaction metrics and pool reserves for 6 hours post-unpause.
+

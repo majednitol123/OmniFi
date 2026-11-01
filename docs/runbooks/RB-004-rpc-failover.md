@@ -56,3 +56,4 @@ curl -s http://localhost:3001/metrics | grep omnifi_rpc_provider_status
 ## 4. Post-Incident Review
 - Log provider downtime duration and evaluate SLA credits.
 - Adjust `failureThreshold` or `resetTimeoutMs` in `@omnifi/rpc-resilience` if rate limits were triggered by burst spikes.
+

@@ -1,5 +1,6 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { z } from 'zod';
+import { createHash } from 'crypto';
 import { sendProblemDetails } from '../errors/problem-details';
 
 const SwapPrepareSchema = z.object({
@@ -49,6 +50,41 @@ const LiquidityRemovePrepareSchema = z.object({
   recipient: z.string().optional(),
   deadline: z.string().optional(),
 });
+
+function getAnchorInstructionDiscriminator(name: string): Buffer {
+  const preimage = `global:${name}`;
+  return createHash('sha256').update(preimage).digest().subarray(0, 8);
+}
+
+function encodeSolanaSwapData(amountIn: bigint, minAmountOut: bigint, zeroForOne: boolean): string {
+  const discriminator = getAnchorInstructionDiscriminator('swap_exact_input');
+  const buffer = Buffer.alloc(8 + 8 + 8 + 1);
+  discriminator.copy(buffer, 0);
+  buffer.writeBigUInt64LE(amountIn, 8);
+  buffer.writeBigUInt64LE(minAmountOut, 16);
+  buffer.writeUInt8(zeroForOne ? 1 : 0, 24);
+  return buffer.toString('hex');
+}
+
+function encodeSolanaAddLiquidityData(amount0Desired: bigint, amount1Desired: bigint): string {
+  const discriminator = getAnchorInstructionDiscriminator('add_liquidity');
+  const buffer = Buffer.alloc(8 + 8 + 8);
+  discriminator.copy(buffer, 0);
+  buffer.writeBigUInt64LE(amount0Desired, 8);
+  buffer.writeBigUInt64LE(amount1Desired, 16);
+  return buffer.toString('hex');
+}
+
+function encodeSolanaRemoveLiquidityData(liquidity: bigint, amount0Min: bigint, amount1Min: bigint): string {
+  const discriminator = getAnchorInstructionDiscriminator('remove_liquidity');
+  const buffer = Buffer.alloc(8 + 16 + 8 + 8);
+  discriminator.copy(buffer, 0);
+  buffer.writeBigUInt64LE(liquidity & 0xffffffffffffffffn, 8);
+  buffer.writeBigUInt64LE(liquidity >> 64n, 16);
+  buffer.writeBigUInt64LE(amount0Min, 24);
+  buffer.writeBigUInt64LE(amount1Min, 32);
+  return buffer.toString('hex');
+}
 
 export function registerPrepareRoutes(fastify: FastifyInstance): void {
   // POST /api/v1/swap/prepare
@@ -100,6 +136,11 @@ export function registerPrepareRoutes(fastify: FastifyInstance): void {
       };
     }
 
+    const rawIn = BigInt(amountIn);
+    const rawMinOut = BigInt(minAmountOut);
+    const zeroForOne = tokenIn.toLowerCase() < tokenOut.toLowerCase();
+    const solanaInstructionData = encodeSolanaSwapData(rawIn, rawMinOut, zeroForOne);
+
     return {
       namespace: 'solana',
       networkId,
@@ -113,7 +154,7 @@ export function registerPrepareRoutes(fastify: FastifyInstance): void {
               { pubkey: tokenIn, isSigner: false, isWritable: true },
               { pubkey: tokenOut, isSigner: false, isWritable: true },
             ],
-            data: 'swap_mock_payload',
+            data: solanaInstructionData,
           },
         ],
       },
@@ -164,6 +205,8 @@ export function registerPrepareRoutes(fastify: FastifyInstance): void {
       };
     }
 
+    const solanaAddData = encodeSolanaAddLiquidityData(BigInt(amount0Desired), BigInt(amount1Desired));
+
     return {
       namespace: 'solana',
       networkId,
@@ -171,9 +214,9 @@ export function registerPrepareRoutes(fastify: FastifyInstance): void {
       preparedTransaction: {
         instructions: [
           {
-            programId: 'BSn4qU6Reocr7apUznvRkXLQ4psydsrayW9YWyToD6x2',
+            programId: 'Ad85ZckvQezw7n3VjYqgoXYPyV5zCsTAzrG8qMhs6La3',
             keys: [{ pubkey: userAddress, isSigner: true, isWritable: true }],
-            data: 'increase_liquidity_mock_payload',
+            data: solanaAddData,
           },
         ],
       },
@@ -203,15 +246,44 @@ export function registerPrepareRoutes(fastify: FastifyInstance): void {
     const { namespace, networkId, userAddress, poolId, liquidity, amount0Min, amount1Min } =
       parseResult.data;
 
+    if (namespace === 'eip155') {
+      return {
+        namespace: 'eip155',
+        networkId,
+        userAddress,
+        preparedTransaction: {
+          to: '0xC36442b4a4522E871399CD717aBDD847Ab11FE88',
+          data: '0x0c49ccbe', // decreaseLiquidity((uint256,uint128,uint256,uint256,uint256))
+          value: '0',
+          gasLimit: '250000',
+        },
+        metadata: {
+          poolId,
+          liquidity,
+          amount0Min,
+          amount1Min,
+        },
+      };
+    }
+
+    const solanaRemoveData = encodeSolanaRemoveLiquidityData(
+      BigInt(liquidity),
+      BigInt(amount0Min),
+      BigInt(amount1Min),
+    );
+
     return {
-      namespace,
+      namespace: 'solana',
       networkId,
       userAddress,
       preparedTransaction: {
-        to: '0xC36442b4a4522E871399CD717aBDD847Ab11FE88',
-        data: '0x0c49ccbe', // decreaseLiquidity((uint256,uint128,uint256,uint256,uint256))
-        value: '0',
-        gasLimit: '250000',
+        instructions: [
+          {
+            programId: 'Ad85ZckvQezw7n3VjYqgoXYPyV5zCsTAzrG8qMhs6La3',
+            keys: [{ pubkey: userAddress, isSigner: true, isWritable: true }],
+            data: solanaRemoveData,
+          },
+        ],
       },
       metadata: {
         poolId,
@@ -222,4 +294,3 @@ export function registerPrepareRoutes(fastify: FastifyInstance): void {
     };
   });
 }
-
