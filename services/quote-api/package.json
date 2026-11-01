@@ -17,11 +17,13 @@
     "@omnifi/config": "workspace:*",
     "@omnifi/domain": "workspace:*",
     "@omnifi/quote-engine": "workspace:*",
+    "@omnifi/rpc-resilience": "workspace:*",
     "@omnifi/sdk-evm": "workspace:*",
     "@omnifi/sdk-solana": "workspace:*",
     "@omnifi/sdk-unified": "workspace:*",
     "@solana/web3.js": "^1.95.8",
     "fastify": "^4.28.1",
+    "prom-client": "^15.1.3",
     "viem": "^2.57.14",
     "zod": "^3.23.8"
   },

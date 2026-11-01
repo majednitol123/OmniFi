@@ -13,6 +13,7 @@ import { registerPoolsRoutes } from './routes/pools';
 import { registerPositionsRoutes } from './routes/positions';
 import { registerPrepareRoutes } from './routes/prepare';
 import { registerAnalyticsRoutes } from './routes/analytics';
+import { register, httpRequestDurationSeconds, httpRequestsTotal } from './metrics';
 
 export interface BuildServerOptions {
   graph?: PoolGraph;
@@ -58,9 +59,29 @@ export async function buildServer(options: BuildServerOptions = {}): Promise<Fas
     );
   });
 
+  // Prometheus Metrics Hook
+  fastify.addHook('onRequest', async (request: any) => {
+    request.startTime = performance.now();
+  });
+
+  fastify.addHook('onResponse', async (request: any, reply) => {
+    if (request.startTime) {
+      const duration = (performance.now() - request.startTime) / 1000;
+      const route = request.routeOptions?.url || request.url.split('?')[0];
+      httpRequestDurationSeconds.observe({ method: request.method, route }, duration);
+      httpRequestsTotal.inc({ method: request.method, route, status: reply.statusCode.toString() });
+    }
+  });
+
   // Health check
   fastify.get('/health', async () => {
     return { status: 'healthy', timestamp: Date.now() };
+  });
+
+  // Prometheus /metrics endpoint
+  fastify.get('/metrics', async (request, reply) => {
+    reply.header('Content-Type', register.contentType);
+    return register.metrics();
   });
 
   const graph = options.graph ?? createDefaultGraph();

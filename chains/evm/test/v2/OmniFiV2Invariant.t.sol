@@ -23,10 +23,13 @@ contract OmniFiV2Handler is Test {
 
     function swap0For1(uint256 amountInRaw) public {
         (uint112 r0, uint112 r1,) = pair.getReserves();
-        if (r0 == 0 || r1 == 0) return;
+        if (r0 <= 2000 || r1 <= 2000) return;
+
+        uint256 maxIn = uint256(r0) / 2;
+        if (maxIn < 1000) return;
 
         // Bound amountIn between 1000 and r0 / 2 (prevent 100% drain and zero output)
-        uint256 amountIn = bound(amountInRaw, 1000, uint256(r0) / 2);
+        uint256 amountIn = bound(amountInRaw, 1000, maxIn);
         if (amountIn == 0) return;
 
         uint256 expectedOut = OmniFiV2Library.getAmountOut(amountIn, r0, r1, 3000);
@@ -43,10 +46,13 @@ contract OmniFiV2Handler is Test {
 
     function swap1For0(uint256 amountInRaw) public {
         (uint112 r0, uint112 r1,) = pair.getReserves();
-        if (r0 == 0 || r1 == 0) return;
+        if (r0 <= 2000 || r1 <= 2000) return;
+
+        uint256 maxIn = uint256(r1) / 2;
+        if (maxIn < 1000) return;
 
         // Bound amountIn between 1000 and r1 / 2 (prevent 100% drain and zero output)
-        uint256 amountIn = bound(amountInRaw, 1000, uint256(r1) / 2);
+        uint256 amountIn = bound(amountInRaw, 1000, maxIn);
         if (amountIn == 0) return;
 
         uint256 expectedOut = OmniFiV2Library.getAmountOut(amountIn, r1, r0, 3000);
