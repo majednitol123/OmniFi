@@ -23,7 +23,7 @@ pub struct RemoveLiquidity<'info> {
         ],
         bump = pool_state.bump
     )]
-    pub pool_state: Account<'info, PoolState>,
+    pub pool_state: Box<Account<'info, PoolState>>,
 
     /// CHECK: Pool authority PDA for CPI signing
     #[account(

@@ -1,0 +1,214 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "OmniFi Quote & Routing API",
+    "version": "1.0.0",
+    "description": "Multi-chain RESTful quote engine and transaction simulation service for EVM and Solana AMM/CLMM liquidity pools."
+  },
+  "servers": [
+    {
+      "url": "https://api.omnifi.finance",
+      "description": "Production API"
+    },
+    {
+      "url": "http://localhost:3001",
+      "description": "Local Development Server"
+    }
+  ],
+  "paths": {
+    "/api/v1/quotes": {
+      "get": {
+        "summary": "Request Optimal Swap Quote",
+        "description": "Calculates the best execution route and exact amounts for a token swap across V2, V3/V4 CLMM, or Solana AMM/CLMM.",
+        "parameters": [
+          {
+            "name": "tokenIn",
+            "in": "query",
+            "required": true,
+            "description": "Canonical CAIP token reference (e.g. eip155:1:0xa0b86... or solana:mainnet-beta:EPjFW...)",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "tokenOut",
+            "in": "query",
+            "required": true,
+            "description": "Canonical CAIP token reference for output asset",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "amountIn",
+            "in": "query",
+            "required": true,
+            "description": "Input token amount in base integer units (no floating-point)",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "slippageToleranceBps",
+            "in": "query",
+            "required": false,
+            "description": "Slippage tolerance in basis points (1 bp = 0.01%, default 50)",
+            "schema": { "type": "integer", "default": 50 }
+          },
+          {
+            "name": "allowSplits",
+            "in": "query",
+            "required": false,
+            "description": "Whether to evaluate multi-path volume split routing (default true)",
+            "schema": { "type": "boolean", "default": true }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Best swap quote computed successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SwapQuote" }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error or invalid token parameters",
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemDetails" }
+              }
+            }
+          },
+          "404": {
+            "description": "No liquidity route found between the tokens",
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemDetails" }
+              }
+            }
+          },
+          "422": {
+            "description": "Insufficient pool liquidity along route",
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemDetails" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/routes": {
+      "get": {
+        "summary": "Discover Candidate Route Paths",
+        "description": "Returns candidate route graph paths between tokens without pricing simulation.",
+        "parameters": [
+          {
+            "name": "tokenIn",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "tokenOut",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "maxHops",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "default": 3, "maximum": 5 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Candidate routes list"
+          }
+        }
+      }
+    },
+    "/api/v1/simulate": {
+      "post": {
+        "summary": "Pre-flight Transaction Simulation",
+        "description": "Dry-runs transaction execution via node RPC (eth_call or simulateTransaction) prior to signing.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/SimulateRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Simulation execution result"
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "summary": "Health Check",
+        "responses": {
+          "200": { "description": "Service is healthy" }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ProblemDetails": {
+        "type": "object",
+        "required": ["type", "title", "status", "detail"],
+        "properties": {
+          "type": { "type": "string", "format": "uri" },
+          "title": { "type": "string" },
+          "status": { "type": "integer" },
+          "detail": { "type": "string" },
+          "instance": { "type": "string" },
+          "invalidParams": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": { "type": "string" },
+                "reason": { "type": "string" }
+              }
+            }
+          }
+        }
+      },
+      "SwapQuote": {
+        "type": "object",
+        "required": ["quoteId", "namespace", "chainRef", "tokenIn", "tokenOut", "amountIn", "amountOut", "executionPrice", "priceImpact", "routes", "expiresAt", "ttlMs"],
+        "properties": {
+          "quoteId": { "type": "string" },
+          "namespace": { "type": "string", "enum": ["eip155", "solana"] },
+          "chainRef": { "type": "string" },
+          "tokenIn": { "type": "object" },
+          "tokenOut": { "type": "object" },
+          "amountIn": { "type": "string" },
+          "amountOut": { "type": "string" },
+          "executionPrice": { "type": "string" },
+          "priceImpact": {
+            "type": "object",
+            "properties": {
+              "bps": { "type": "integer" },
+              "percentage": { "type": "string" },
+              "level": { "type": "string", "enum": ["low", "medium", "high", "critical"] }
+            }
+          },
+          "routes": { "type": "array" },
+          "splits": { "type": "array" },
+          "expiresAt": { "type": "integer" },
+          "ttlMs": { "type": "integer" }
+        }
+      },
+      "SimulateRequest": {
+        "type": "object",
+        "required": ["intent"],
+        "properties": {
+          "intent": { "type": "object" },
+          "rpcUrl": { "type": "string", "format": "uri" }
+        }
+      }
+    }
+  }
+}

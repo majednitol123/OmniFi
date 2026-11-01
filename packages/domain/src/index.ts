@@ -9,3 +9,4 @@ export * from './math';
 export * from './rounding';
 export * from './formatting';
 export * from './errors';
+export * from './routing';

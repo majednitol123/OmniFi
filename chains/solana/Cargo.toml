@@ -1,7 +1,8 @@
 [workspace]
 members = [
     "programs/placeholder",
-    "programs/omnifi_amm"
+    "programs/omnifi_amm",
+    "programs/omnifi_clmm"
 ]
 resolver = "2"
 
