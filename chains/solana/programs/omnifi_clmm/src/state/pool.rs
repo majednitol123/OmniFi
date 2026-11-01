@@ -25,3 +25,4 @@ pub struct PoolState {
 impl PoolState {
     pub const LEN: usize = 8 + (32 * 5) + 4 + 2 + 16 + 4 + 16 + 16 + 16 + 8 + 8 + 1 + 1 + 1;
 }
+

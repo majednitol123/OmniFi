@@ -13,3 +13,4 @@ pub struct GlobalConfig {
 impl GlobalConfig {
     pub const LEN: usize = 8 + 32 + 32 + 4 + 1 + 1;
 }
+

@@ -113,3 +113,4 @@ export interface TransactionIntent {
   readonly simulationSuccess: boolean;
   readonly simulationError?: string;
 }
+

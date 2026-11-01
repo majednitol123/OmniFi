@@ -223,3 +223,4 @@ export const SlippageModal: React.FC<SlippageModalProps> = ({
     </div>
   );
 };
+

@@ -67,3 +67,4 @@ pub fn process_open_position(
 
     Ok(())
 }
+

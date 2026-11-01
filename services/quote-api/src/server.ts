@@ -84,3 +84,4 @@ export async function start() {
 if (process.env.NODE_ENV !== 'test' && require.main === module) {
   start();
 }
+

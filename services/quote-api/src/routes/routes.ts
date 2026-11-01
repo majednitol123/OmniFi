@@ -79,3 +79,4 @@ export function registerRoutesDiscovery(fastify: FastifyInstance, graph: PoolGra
     return reply.status(200).send(serializeBigInts(response));
   });
 }
+

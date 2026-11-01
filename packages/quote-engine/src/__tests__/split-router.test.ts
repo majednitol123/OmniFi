@@ -54,3 +54,4 @@ describe('SplitRouter', () => {
     expect(quote!.splits![0]!.percentage).toBe(100);
   });
 });
+

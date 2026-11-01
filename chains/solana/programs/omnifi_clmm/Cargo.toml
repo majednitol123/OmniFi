@@ -23,3 +23,4 @@ uint = { version = "0.10", default-features = false }
 
 [lints]
 workspace = true
+

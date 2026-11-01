@@ -21,3 +21,4 @@ export function buildPriceImpact(idealOutput: bigint, actualOutput: bigint): Pri
   const bps = calculatePriceImpactBps(idealOutput, actualOutput);
   return createPriceImpact(bps);
 }
+

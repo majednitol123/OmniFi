@@ -85,3 +85,4 @@ export function registerQuoteRoutes(fastify: FastifyInstance, graph: PoolGraph) 
     return reply.status(200).send(serializeBigInts(quote));
   });
 }
+

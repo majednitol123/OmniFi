@@ -18,3 +18,4 @@ pub struct PositionState {
 impl PositionState {
     pub const LEN: usize = 8 + 32 + 32 + 4 + 4 + 16 + 16 + 16 + 8 + 8 + 1;
 }
+

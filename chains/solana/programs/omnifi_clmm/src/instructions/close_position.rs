@@ -25,3 +25,4 @@ pub fn process_close_position(ctx: Context<ClosePosition>) -> Result<()> {
 
     Ok(())
 }
+

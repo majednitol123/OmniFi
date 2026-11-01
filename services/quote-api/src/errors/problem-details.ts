@@ -34,3 +34,4 @@ export function sendProblemDetails(
     .header('content-type', 'application/problem+json')
     .send(problem);
 }
+

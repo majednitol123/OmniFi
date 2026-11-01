@@ -91,3 +91,4 @@ describe('QuoteCalculator', () => {
     expect(quote.feeBreakdowns[0]!.protocolFeeAmount).toBeGreaterThan(0n);
   });
 });
+

@@ -80,3 +80,4 @@ pub enum ClmmError {
     #[msg("Amount received is below minimum required")]
     AmountBelowMinimum,
 }
+

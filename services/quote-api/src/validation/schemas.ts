@@ -61,3 +61,4 @@ export const SimulateBodySchema = z.object({
 });
 
 export type SimulateBody = z.infer<typeof SimulateBodySchema>;
+
