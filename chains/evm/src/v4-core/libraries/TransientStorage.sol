@@ -48,7 +48,10 @@ library TransientStorage {
         return tloadInt(deltaSlot(locker, currency));
     }
 
-    function applyDelta(address locker, Currency currency, int256 delta) internal returns (int256 newDelta) {
+    function applyDelta(address locker, Currency currency, int256 delta)
+        internal
+        returns (int256 newDelta)
+    {
         bytes32 slot = deltaSlot(locker, currency);
         int256 currentDelta = tloadInt(slot);
 

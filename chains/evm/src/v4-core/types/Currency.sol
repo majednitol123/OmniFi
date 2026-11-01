@@ -5,12 +5,7 @@ pragma solidity 0.8.26;
 /// @notice User-defined value type wrapping an address for gas efficiency and type safety
 type Currency is address;
 
-using {
-    equals as ==,
-    notEquals as !=,
-    greaterThan as >,
-    lessThan as <
-} for Currency global;
+using { equals as ==, notEquals as !=, greaterThan as >, lessThan as < } for Currency global;
 
 function equals(Currency a, Currency b) pure returns (bool) {
     return Currency.unwrap(a) == Currency.unwrap(b);

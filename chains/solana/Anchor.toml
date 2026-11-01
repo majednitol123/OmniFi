@@ -7,6 +7,7 @@ skip-lint = false
 
 [programs.localnet]
 placeholder = "GuJFxNNmNpeVw1QrhJZ61MFPkiebKY3vVgtazHTWUsq7"
+omnifi_amm = "Ad85ZckvQezw7n3VjYqgoXYPyV5zCsTAzrG8qMhs6La3"
 
 [registry]
 url = "https://api.apr.dev"

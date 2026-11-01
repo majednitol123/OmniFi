@@ -341,9 +341,8 @@ contract CLMMDifferentialTest is Test {
         assertEq(feeDelta, 340_282_366_920_938_463_463_374_607_431_768_211);
 
         // 2. small_fee_high_liquidity: fee=100, L=1e24
-        uint256 feeDeltaSmall = FullMath.mulDiv(
-            100, FixedPoint128.Q128, 1_000_000_000_000_000_000_000_000
-        );
+        uint256 feeDeltaSmall =
+            FullMath.mulDiv(100, FixedPoint128.Q128, 1_000_000_000_000_000_000_000_000);
         assertEq(feeDeltaSmall, 34_028_236_692_093_846);
 
         // 3. fee_growth_inside

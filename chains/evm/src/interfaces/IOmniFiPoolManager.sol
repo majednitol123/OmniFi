@@ -51,12 +51,7 @@ interface IOmniFiPoolManager {
         uint24 fee
     );
 
-    event Donate(
-        PoolId indexed id,
-        address indexed sender,
-        uint256 amount0,
-        uint256 amount1
-    );
+    event Donate(PoolId indexed id, address indexed sender, uint256 amount0, uint256 amount1);
 
     event ProtocolFeeUpdated(PoolId indexed id, uint24 protocolFee);
     event PoolPaused(PoolId indexed id, bool isPaused);
@@ -81,21 +76,17 @@ interface IOmniFiPoolManager {
 
     function initialize(PoolKey memory key, uint160 sqrtPriceX96) external returns (int24 tick);
 
-    function modifyLiquidity(
-        PoolKey memory key,
-        ModifyLiquidityParams memory params
-    ) external returns (BalanceDelta delta);
+    function modifyLiquidity(PoolKey memory key, ModifyLiquidityParams memory params)
+        external
+        returns (BalanceDelta delta);
 
-    function swap(
-        PoolKey memory key,
-        SwapParams memory params
-    ) external returns (BalanceDelta delta);
+    function swap(PoolKey memory key, SwapParams memory params)
+        external
+        returns (BalanceDelta delta);
 
-    function donate(
-        PoolKey memory key,
-        uint256 amount0,
-        uint256 amount1
-    ) external returns (BalanceDelta delta);
+    function donate(PoolKey memory key, uint256 amount0, uint256 amount1)
+        external
+        returns (BalanceDelta delta);
 
     function settle(Currency currency) external payable returns (uint256 paid);
 

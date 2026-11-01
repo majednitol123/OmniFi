@@ -1,6 +1,7 @@
 [workspace]
 members = [
-    "programs/placeholder"
+    "programs/placeholder",
+    "programs/omnifi_amm"
 ]
 resolver = "2"
 

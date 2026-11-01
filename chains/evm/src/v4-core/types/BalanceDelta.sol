@@ -7,10 +7,7 @@ pragma solidity 0.8.26;
 /// Lower 128 bits: amount1 (signed)
 type BalanceDelta is int256;
 
-using {
-    deltaEquals as ==,
-    deltaNotEquals as !=
-} for BalanceDelta global;
+using { deltaEquals as ==, deltaNotEquals as != } for BalanceDelta global;
 
 function deltaEquals(BalanceDelta a, BalanceDelta b) pure returns (bool) {
     return BalanceDelta.unwrap(a) == BalanceDelta.unwrap(b);

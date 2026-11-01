@@ -7,10 +7,7 @@ import { PoolKey } from "./PoolKey.sol";
 /// @notice 32-byte identifier computed from a PoolKey
 type PoolId is bytes32;
 
-using {
-    idEquals as ==,
-    idNotEquals as !=
-} for PoolId global;
+using { idEquals as ==, idNotEquals as != } for PoolId global;
 
 function idEquals(PoolId a, PoolId b) pure returns (bool) {
     return PoolId.unwrap(a) == PoolId.unwrap(b);
