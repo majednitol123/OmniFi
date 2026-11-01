@@ -67,3 +67,25 @@ export interface ApiError {
   readonly chainError?: ChainErrorContext | undefined;
 }
 
+export class OmniFiApiError extends Error {
+  readonly code: ErrorCode;
+  readonly status: number;
+  readonly details?: unknown | undefined;
+  readonly userMessage?: string | undefined;
+
+  constructor(
+    message: string,
+    code: ErrorCode,
+    status: number,
+    details?: unknown | undefined,
+    userMessage?: string | undefined,
+  ) {
+    super(userMessage || message);
+    this.name = 'OmniFiApiError';
+    this.code = code;
+    this.status = status;
+    this.details = details;
+    this.userMessage = userMessage;
+  }
+}
+

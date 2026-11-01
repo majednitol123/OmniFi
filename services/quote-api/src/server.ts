@@ -7,6 +7,12 @@ import { createDefaultGraph } from './registry/default-pools';
 import { registerQuoteRoutes } from './routes/quotes';
 import { registerRoutesDiscovery } from './routes/routes';
 import { registerSimulateRoutes } from './routes/simulate';
+import { registerNetworksRoutes } from './routes/networks';
+import { registerTokensRoutes } from './routes/tokens';
+import { registerPoolsRoutes } from './routes/pools';
+import { registerPositionsRoutes } from './routes/positions';
+import { registerPrepareRoutes } from './routes/prepare';
+import { registerAnalyticsRoutes } from './routes/analytics';
 
 export interface BuildServerOptions {
   graph?: PoolGraph;
@@ -60,6 +66,12 @@ export async function buildServer(options: BuildServerOptions = {}): Promise<Fas
   const graph = options.graph ?? createDefaultGraph();
 
   // Register API routes
+  registerNetworksRoutes(fastify);
+  registerTokensRoutes(fastify);
+  registerPoolsRoutes(fastify, graph);
+  registerPositionsRoutes(fastify);
+  registerPrepareRoutes(fastify);
+  registerAnalyticsRoutes(fastify);
   registerQuoteRoutes(fastify, graph);
   registerRoutesDiscovery(fastify, graph);
   registerSimulateRoutes(fastify);

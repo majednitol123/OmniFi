@@ -136,6 +136,31 @@ importers:
         specifier: ^2.1.8
         version: 2.1.9(@types/node@20.19.43)
 
+  packages/database:
+    dependencies:
+      '@omnifi/config':
+        specifier: workspace:*
+        version: link:../config
+      '@omnifi/domain':
+        specifier: workspace:*
+        version: link:../domain
+    devDependencies:
+      '@omnifi/eslint-config':
+        specifier: workspace:*
+        version: link:../eslint-config
+      '@omnifi/prettier-config':
+        specifier: workspace:*
+        version: link:../prettier-config
+      '@types/node':
+        specifier: ^20.11.0
+        version: 20.19.43
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9(@types/node@20.19.43)
+
   packages/domain:
     devDependencies:
       '@omnifi/eslint-config':
@@ -184,7 +209,7 @@ importers:
         version: 1.99.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)
       viem:
         specifier: ^2.57.14
-        version: 2.57.14(bufferutil@4.1.0)(typescript@5.9.3)(zod@3.25.76)
+        version: 2.57.14(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)(zod@3.25.76)
     devDependencies:
       '@omnifi/eslint-config':
         specifier: workspace:*
@@ -192,6 +217,34 @@ importers:
       '@omnifi/prettier-config':
         specifier: workspace:*
         version: link:../prettier-config
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9(@types/node@20.19.43)
+
+  packages/sdk-evm:
+    dependencies:
+      '@omnifi/config':
+        specifier: workspace:*
+        version: link:../config
+      '@omnifi/domain':
+        specifier: workspace:*
+        version: link:../domain
+      viem:
+        specifier: ^2.57.14
+        version: 2.57.14(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)(zod@3.25.76)
+    devDependencies:
+      '@omnifi/eslint-config':
+        specifier: workspace:*
+        version: link:../eslint-config
+      '@omnifi/prettier-config':
+        specifier: workspace:*
+        version: link:../prettier-config
+      '@types/node':
+        specifier: ^20.11.0
+        version: 20.19.43
       typescript:
         specifier: ^5.7.3
         version: 5.9.3
@@ -233,6 +286,43 @@ importers:
         specifier: ^2.1.8
         version: 2.1.9(@types/node@20.19.43)
 
+  packages/sdk-unified:
+    dependencies:
+      '@omnifi/config':
+        specifier: workspace:*
+        version: link:../config
+      '@omnifi/domain':
+        specifier: workspace:*
+        version: link:../domain
+      '@omnifi/quote-engine':
+        specifier: workspace:*
+        version: link:../quote-engine
+      '@omnifi/sdk-evm':
+        specifier: workspace:*
+        version: link:../sdk-evm
+      '@omnifi/sdk-solana':
+        specifier: workspace:*
+        version: link:../sdk-solana
+      '@solana/web3.js':
+        specifier: ^1.95.8
+        version: 1.99.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)
+      viem:
+        specifier: ^2.57.14
+        version: 2.57.14(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)(zod@3.25.76)
+    devDependencies:
+      '@omnifi/eslint-config':
+        specifier: workspace:*
+        version: link:../eslint-config
+      '@omnifi/prettier-config':
+        specifier: workspace:*
+        version: link:../prettier-config
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9(@types/node@20.19.43)
+
   packages/token-registry:
     dependencies:
       '@omnifi/config':
@@ -258,6 +348,74 @@ importers:
         specifier: ^2.1.8
         version: 2.1.9(@types/node@20.19.43)
 
+  services/indexer-evm:
+    dependencies:
+      '@omnifi/config':
+        specifier: workspace:*
+        version: link:../../packages/config
+      '@omnifi/database':
+        specifier: workspace:*
+        version: link:../../packages/database
+      '@omnifi/domain':
+        specifier: workspace:*
+        version: link:../../packages/domain
+      '@omnifi/sdk-evm':
+        specifier: workspace:*
+        version: link:../../packages/sdk-evm
+      viem:
+        specifier: ^2.57.14
+        version: 2.57.14(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)(zod@3.25.76)
+    devDependencies:
+      '@omnifi/eslint-config':
+        specifier: workspace:*
+        version: link:../../packages/eslint-config
+      '@omnifi/prettier-config':
+        specifier: workspace:*
+        version: link:../../packages/prettier-config
+      '@types/node':
+        specifier: ^20.11.0
+        version: 20.19.43
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9(@types/node@20.19.43)
+
+  services/indexer-solana:
+    dependencies:
+      '@omnifi/config':
+        specifier: workspace:*
+        version: link:../../packages/config
+      '@omnifi/database':
+        specifier: workspace:*
+        version: link:../../packages/database
+      '@omnifi/domain':
+        specifier: workspace:*
+        version: link:../../packages/domain
+      '@omnifi/sdk-solana':
+        specifier: workspace:*
+        version: link:../../packages/sdk-solana
+      '@solana/web3.js':
+        specifier: ^1.95.8
+        version: 1.99.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)
+    devDependencies:
+      '@omnifi/eslint-config':
+        specifier: workspace:*
+        version: link:../../packages/eslint-config
+      '@omnifi/prettier-config':
+        specifier: workspace:*
+        version: link:../../packages/prettier-config
+      '@types/node':
+        specifier: ^20.11.0
+        version: 20.19.43
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9(@types/node@20.19.43)
+
   services/quote-api:
     dependencies:
       '@fastify/cors':
@@ -275,12 +433,61 @@ importers:
       '@omnifi/quote-engine':
         specifier: workspace:*
         version: link:../../packages/quote-engine
+      '@omnifi/sdk-evm':
+        specifier: workspace:*
+        version: link:../../packages/sdk-evm
+      '@omnifi/sdk-solana':
+        specifier: workspace:*
+        version: link:../../packages/sdk-solana
+      '@omnifi/sdk-unified':
+        specifier: workspace:*
+        version: link:../../packages/sdk-unified
+      '@solana/web3.js':
+        specifier: ^1.95.8
+        version: 1.99.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)
       fastify:
         specifier: ^4.28.1
         version: 4.29.1
+      viem:
+        specifier: ^2.57.14
+        version: 2.57.14(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)(zod@3.25.76)
       zod:
         specifier: ^3.23.8
         version: 3.25.76
+    devDependencies:
+      '@omnifi/eslint-config':
+        specifier: workspace:*
+        version: link:../../packages/eslint-config
+      '@omnifi/prettier-config':
+        specifier: workspace:*
+        version: link:../../packages/prettier-config
+      '@types/node':
+        specifier: ^20.11.0
+        version: 20.19.43
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9(@types/node@20.19.43)
+
+  services/reconciliation-worker:
+    dependencies:
+      '@omnifi/config':
+        specifier: workspace:*
+        version: link:../../packages/config
+      '@omnifi/database':
+        specifier: workspace:*
+        version: link:../../packages/database
+      '@omnifi/domain':
+        specifier: workspace:*
+        version: link:../../packages/domain
+      '@omnifi/sdk-evm':
+        specifier: workspace:*
+        version: link:../../packages/sdk-evm
+      '@omnifi/sdk-solana':
+        specifier: workspace:*
+        version: link:../../packages/sdk-solana
     devDependencies:
       '@omnifi/eslint-config':
         specifier: workspace:*
@@ -3355,9 +3562,9 @@ snapshots:
     dependencies:
       ws: 7.5.13(bufferutil@4.1.0)(utf-8-validate@6.0.6)
 
-  isows@1.0.7(ws@8.21.0(bufferutil@4.1.0)):
+  isows@1.0.7(ws@8.21.0(bufferutil@4.1.0)(utf-8-validate@6.0.6)):
     dependencies:
-      ws: 8.21.0(bufferutil@4.1.0)
+      ws: 8.21.0(bufferutil@4.1.0)(utf-8-validate@6.0.6)
 
   jayson@4.3.0(bufferutil@4.1.0)(utf-8-validate@6.0.6):
     dependencies:
@@ -3918,16 +4125,16 @@ snapshots:
 
   uuid@8.3.2: {}
 
-  viem@2.57.14(bufferutil@4.1.0)(typescript@5.9.3)(zod@3.25.76):
+  viem@2.57.14(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)(zod@3.25.76):
     dependencies:
       '@noble/curves': 1.9.1
       '@noble/hashes': 1.8.0
       '@scure/bip32': 1.7.0
       '@scure/bip39': 1.6.0
       abitype: 1.2.3(typescript@5.9.3)(zod@3.25.76)
-      isows: 1.0.7(ws@8.21.0(bufferutil@4.1.0))
+      isows: 1.0.7(ws@8.21.0(bufferutil@4.1.0)(utf-8-validate@6.0.6))
       ox: 0.14.59(typescript@5.9.3)(zod@3.25.76)
-      ws: 8.21.0(bufferutil@4.1.0)
+      ws: 8.21.0(bufferutil@4.1.0)(utf-8-validate@6.0.6)
     optionalDependencies:
       typescript: 5.9.3
     transitivePeerDependencies:
@@ -4030,9 +4237,10 @@ snapshots:
       bufferutil: 4.1.0
       utf-8-validate: 6.0.6
 
-  ws@8.21.0(bufferutil@4.1.0):
+  ws@8.21.0(bufferutil@4.1.0)(utf-8-validate@6.0.6):
     optionalDependencies:
       bufferutil: 4.1.0
+      utf-8-validate: 6.0.6
 
   ws@8.22.1(bufferutil@4.1.0)(utf-8-validate@6.0.6):
     optionalDependencies:
