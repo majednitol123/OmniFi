@@ -48,5 +48,20 @@ coverage/
 *.lcov
 ui-test-artifacts/
 
-# Build manifests
+# Build manifests & scanner outputs
 build-manifest.sha256
+report.md
+chains/evm/report.md
+slither-report.json
+aderyn-report.md
+
+# Internal workstreams, plans & scratchpads
+plan.md
+docs/plan.md
+review.md
+security_implemetion.md
+security_implementation.md
+docs/release/
+docs/requirements-traceability.csv
+docs/adr/ADR-000-template.md
+

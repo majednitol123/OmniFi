@@ -1,5 +1,5 @@
 # OmniFi — Cargo Deny Configuration
-# Documented per security_implemetion.md §2.B & Phase 3
+# Documented per OmniFi Supply Chain Security Specification
 
 [advisories]
 version = 2

@@ -28,7 +28,6 @@ The audit evaluates the repository in strict accordance with the following Git t
 | **Solana Anchor Programs** | `chains/solana/programs/` | `7f29cd01ca18f2b9db644eb954bace8cc786fc7b` | ~3,918 Rust |
 | **Core Libraries & SDKs** | `packages/` | `7773dbb807f97832ada00ff3080a578a1c117283` | ~13,981 TypeScript |
 | **Backend Daemons & Indexers** | `services/` | `ac7b36c9bf5c5a5db989b26aa7522c867aea41f9` | ~6,615 TypeScript |
-| **Frontend Application** | `apps/web/` | `6df938a6413a1dfdc8fa1a13fc7f8f35698a6639` | ~5,084 TypeScript / TSX |
 
 ---
 
@@ -106,14 +105,14 @@ To ensure exact cryptographic reproducibility, builds must use:
 
 ## 7. Audit Scope Addendum — Remediation Baseline (Post-Audit Fixes)
 
-Following comprehensive architectural review (`review.md`), 57 files were modified to resolve all 14 identified findings (F-01 through F-14) and establish the clean pre-audit candidate:
+Following comprehensive internal security and architectural audits, 57 files were modified to resolve all 14 identified findings (F-01 through F-14) and establish the clean pre-audit candidate:
 
 | Finding Ref | Vulnerability Summary | Remediated Files | Verification Suite |
 |---|---|---|---|
 | **F-01 / Gate E** | False mainnet deployment claims & error-swallowing verification scripts | `deployments/production/*.json`, `scripts/verify-*.sh` | `verify-deployment-hashes.sh`, `verify-roles-and-signers.sh` |
 | **F-02 / P0** | Flash accounting delta non-settlement & multi-caller locker confusion | `chains/evm/src/v4-core/OmniFiPoolManager.sol`, `TransientStorage.sol` | `FlashAccounting.t.sol`, `V4Invariant.t.sol` |
 | **F-03 / P0** | Incomplete transaction preparation calldata & Solana accounts | `services/quote-api/src/routes/prepare.ts`, `@omnifi/sdk-*` | `api.test.ts`, live `curl` integration tests |
-| **F-04 / P0** | Synthetic client-side timer finality and pseudo-random tx hashes | `apps/web/src/lib/tx-executor.ts`, `WalletContext.tsx` | EIP-1193 receipt polling & Solana signature tests |
+| **F-04 / P0** | Synthetic client-side timer finality and pseudo-random tx hashes | `@omnifi/sdk-unified`, `@omnifi/sdk-evm` | EIP-1193 receipt polling & Solana signature tests |
 | **F-05 / P1** | Solana AMM fee deduction reserve desynchronization | `chains/solana/programs/omnifi_amm/src/instructions/swap.rs` | `cargo test`, `integration.test.ts` |
 | **F-06 / P1** | Solana CLMM exact-output swap tick array exhaustion assertion | `chains/solana/programs/omnifi_clmm/src/instructions/swap.rs` | `cargo test`, `integration.test.ts` |
 | **F-07 / P1** | SSRF vulnerability allowing arbitrary cloud metadata/private probing | `services/quote-api/src/routes/simulate.ts` | `api.test.ts`, live `curl` SSRF rejection tests |

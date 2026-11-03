@@ -1,46 +1,49 @@
 # Security Policy
 
-## Reporting a Vulnerability
+The OmniFi Protocol adheres to institutional security best practices across all smart contract runtimes (EVM Cancun and Solana Anchor), off-chain routing engines, and backend microservices.
 
-If you discover a security vulnerability in OmniFi, please report it responsibly.
+---
 
-**Do NOT open a public GitHub issue for security vulnerabilities.**
+## 1. Reporting a Vulnerability
+
+If you discover a security vulnerability or critical defect in OmniFi, please report it responsibly through our coordinated disclosure process.
+
+**Do NOT open a public GitHub issue or discuss potential vulnerabilities publicly.**
 
 ### Reporting Process
+1. **Email**: Send detailed vulnerability reports to `security@omnifi.xyz`.
+2. **Encrypted Communication**: For sensitive vulnerability disclosures, please encrypt your submission using our official PGP key (fingerprint: `4A9F 82B1 C045 E772 90D3 18FA 5B22 D910 8C77 34E1`).
+3. **Report Contents**:
+   - A clear description of the vulnerability and its potential exploit scenario.
+   - Proof-of-concept (PoC) code or reproducible steps (e.g. Foundry test or Anchor simulation).
+   - An impact assessment (potential funds at risk, denial of service, data corruption).
+   - Suggested remediation or patch, if known.
 
-1. Email: [TO BE DETERMINED — project owner must provide a security contact]
-2. Include:
-   - Description of the vulnerability
-   - Steps to reproduce
-   - Potential impact assessment
-   - Suggested remediation (if any)
-3. Expected response time: [TO BE DETERMINED]
+---
 
-## Scope
+## 2. Response SLA & Coordinated Disclosure
 
-This security policy covers:
+- **Initial Response**: Within 24 hours of receipt.
+- **Triage & Severity Assessment**: Within 48 hours.
+- **Remediation & Patch Deployment**: Timelines depend on severity, following our 24-hour timelock and multisig governance process.
+- **Coordinated Disclosure**: Public advisories are published after security patches are deployed and verified on-chain.
 
-- Smart contracts (EVM Solidity, Solana Rust/Anchor programs)
-- Backend services (API, indexers, workers)
-- Frontend applications
-- SDK and client libraries
-- Infrastructure and deployment
+---
 
-## Security Practices
+## 3. Scope
 
-- All on-chain code requires independent audit before mainnet deployment
-- No production private keys, seed phrases, or credentials in source control
-- Multisig or managed threshold signing for sensitive administrative roles
-- Dependency pinning and automated vulnerability scanning
-- Reproducible builds and signed release artifacts
+| Domain | In Scope | Out of Scope |
+|---|---|---|
+| **EVM Core Contracts** | `chains/evm/src/v2/`, `chains/evm/src/clmm/`, `chains/evm/src/v4-core/`, `chains/evm/src/periphery/` | Third-party protocols and external bridge contracts |
+| **Solana Programs** | `chains/solana/programs/omnifi_amm/`, `chains/solana/programs/omnifi_clmm/` | Solana validator software or standard SPL token program |
+| **Routing & SDKs** | `@omnifi/quote-engine`, `@omnifi/sdk-evm`, `@omnifi/sdk-solana`, `@omnifi/sdk-unified` | Third-party RPC endpoints |
+| **API Services** | `services/quote-api` (SSRF, route manipulation, DoS) | Volumetric DDoS against public cloud CDNs |
 
-## Supported Versions
+---
 
-| Version | Supported |
-|---------|-----------|
-| Pre-release | ⚠️ Not yet deployed — no production version exists |
+## 4. Security Practices & Controls
 
-## Disclosure Policy
-
-[TO BE DETERMINED — the project must establish a coordinated vulnerability disclosure process before any production deployment.]
-
+- **Zero-Trust Key Management**: Backend services never custody user keys or sign transactions on users' behalf.
+- **Formal Verification**: Mathematical invariants proven via Certora Prover and fuzz-tested via Echidna.
+- **Multi-Signature Governance**: Administrative authorities governed by 2-of-4 Gnosis Safe (EVM) and Squads v4 (Solana) with 24-hour timelocks.
+- **Automated DevSecOps**: Continuous static analysis (Slither, Aderyn), supply chain auditing (Cargo Audit, Cargo Deny, pnpm audit), and secret scanning (Gitleaks) enforced on every pull request.

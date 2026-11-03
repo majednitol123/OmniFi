@@ -1,7 +1,7 @@
 /**
  * Canonical asset identity model for OmniFi.
  *
- * MANDATE (plan.md §10.1):
+ * MANDATE:
  * NEVER identify a token by symbol alone. Symbols are mutable, unverified, and non-unique.
  * Tokens must always be identified by their full canonical CAIP-style reference.
  *

@@ -3,7 +3,7 @@ import { ErrorCode, ApiError } from '../errors';
 import { OmniFiClient } from '../client';
 import { QuoteRequest, QuoteResponse } from '../types';
 
-describe('API Schema Baseline & Error Taxonomy (plan.md §25)', () => {
+describe('API Schema Baseline & Error Taxonomy', () => {
   it('enforces stable, unique integer error codes without collisions', () => {
     const values = Object.values(ErrorCode).filter(v => typeof v === 'number') as number[];
     const set = new Set(values);

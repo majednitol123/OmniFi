@@ -5,7 +5,7 @@ import { classifySolanaToken } from '../solana-classification';
 import { TokenRegistry, DEFAULT_TOKENS } from '../registry';
 import { parseAssetRef } from '@omnifi/domain';
 
-describe('Token Metadata & Risk Classification (plan.md §11, ADR-006, token-compatibility.md)', () => {
+describe('Token Metadata & Risk Classification (ADR-006, token-compatibility.md)', () => {
   describe('EVM Token Classification', () => {
     it('classifies standard ERC-20 tokens as allowed in pool and swap', () => {
       const standard = classifyEvmToken(EvmTokenBehavior.Standard, true);

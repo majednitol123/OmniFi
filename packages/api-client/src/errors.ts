@@ -1,6 +1,6 @@
 /**
  * Stable error codes for OmniFi API and SDK.
- * Source: plan.md §25
+ * RFC 7807 Problem Details Taxonomy
  *
  * RULES:
  * 1. Codes are permanently numbered and NEVER reassigned or removed.

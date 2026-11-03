@@ -2,7 +2,7 @@ import { AssetRef } from '@omnifi/domain';
 
 /**
  * Risk classification tiers for tokens.
- * Source: plan.md §11, ADR-006, docs/security/token-compatibility.md
+ * Source: ADR-006, docs/security/token-compatibility.md
  */
 export enum RiskTier {
   /** Manually reviewed and verified by protocol operations */

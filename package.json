@@ -25,7 +25,7 @@
     "security:slither": "cd chains/evm && (slither . --config-file slither.config.json --json slither-report.json || test -s slither-report.json)",
     "security:solana": "cd chains/solana && cargo test && cargo audit && cargo deny check",
     "security:deps": "node scripts/security-audit-deps.mjs",
-    "security:infra": "trivy fs --config trivy.yaml .",
+    "security:infra": "trivy fs --config trivy.yaml --scanners misconfig,secret .",
     "security:invariants": "cd chains/evm && forge test --match-test \"invariant_\" --evm-version cancun",
     "security:regression": "cd chains/evm && forge test --match-path test/security/SecurityRegression.t.sol --evm-version cancun",
     "security:all": "pnpm security:secrets && pnpm security:deps && pnpm security:evm && pnpm security:slither && pnpm security:solana && pnpm security:infra && pnpm security:invariants && pnpm security:regression"

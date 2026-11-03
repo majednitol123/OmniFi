@@ -3,7 +3,7 @@
 **Version:** 2.0  
 **Status:** Implemented & Verified — mapped to remediated smart contracts and invariant test suites  
 **Date:** 2026-11-03  
-**Source:** plan.md §28, security_implemetion.md Phase 2  
+**Reference:** OmniFi EVM Architecture & Security Baseline  
 **Spec References:** `evm-clmm-spec.md`, `evm-v2-spec.md`, `v4-architecture-spec.md`, `fee-and-rounding-spec.md`, `token-compatibility.md`
 
 ---

@@ -97,14 +97,6 @@ assert_http_200 "Prometheus Health" "http://127.0.0.1:9090/-/healthy"
 # 6. Grafana
 assert_http_200 "Grafana Health" "http://127.0.0.1:3002/api/health"
 
-# 7. Next.js Web Frontend (if running)
-if docker ps --format '{{.Names}}' | grep -q "omnifi-web"; then
-    assert_http_200 "Frontend Home Page" "http://127.0.0.1:3000/"
-    assert_http_200 "Frontend Pools Page" "http://127.0.0.1:3000/pools"
-    assert_http_200 "Frontend Status Page" "http://127.0.0.1:3000/status"
-    assert_http_200 "Frontend Tokens Page" "http://127.0.0.1:3000/tokens"
-fi
-
 echo ""
 echo "=========================================================="
 echo "    Verification Results: $PASSED PASSED, $FAILED FAILED  "

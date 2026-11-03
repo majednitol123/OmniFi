@@ -59,8 +59,6 @@ When recovering infrastructure from scratch, services MUST be started in strict 
 3. **Serving Tier**:
    - `quote-api`
    - `prometheus` & `grafana`
-4. **Edge & Frontend Tier**:
-   - `apps/web` (Next.js)
 
 ---
 

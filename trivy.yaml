@@ -1,6 +1,4 @@
 # OmniFi Protocol — Trivy Security Scanner Configuration
-# Documented per security_implemetion.md §2.C & Phase 3
-
 scan:
   scanners:
     - vuln
@@ -13,7 +11,6 @@ scan:
     - "cache"
     - ".turbo"
     - ".git"
-    - "apps/web/.next"
   skip-files:
     - "pnpm-lock.yaml"
 

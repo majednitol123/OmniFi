@@ -98,22 +98,6 @@ services:
     depends_on:
       - prometheus
 
-  web:
-    build:
-      context: .
-      dockerfile: apps/web/Dockerfile
-    image: omnifi-web:latest
-    container_name: omnifi-web
-    ports:
-      - '3000:3000'
-    environment:
-      - NODE_ENV=production
-      - PORT=3000
-      - HOST=0.0.0.0
-      - NEXT_PUBLIC_API_URL=http://localhost:3001
-    depends_on:
-      - quote-api
-
 volumes:
   pgdata:
   redisdata:

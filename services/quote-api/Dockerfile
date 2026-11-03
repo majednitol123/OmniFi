@@ -5,7 +5,6 @@ RUN npm install -g pnpm@9.15.4
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY packages ./packages
 COPY services/quote-api ./services/quote-api
-COPY apps/web/package.json ./apps/web/package.json
 COPY chains/solana/package.json ./chains/solana/package.json
 
 RUN pnpm install --frozen-lockfile --prod --ignore-scripts

@@ -1,5 +1,5 @@
 # OmniFi Protocol — Gitleaks Configuration
-# Enforces pre-commit and CI secret scanning per security_implemetion.md §2.C
+# Enforces pre-commit and CI secret scanning across monorepo commits
 
 title = "OmniFi Gitleaks Config"
 

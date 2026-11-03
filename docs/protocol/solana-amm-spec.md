@@ -5,7 +5,7 @@
 **Date:** 2026-11-01  
 **Scope:** Solana-Native Constant-Product AMM Program  
 **Related ADRs:** [ADR-001 (Chain Selection)](../adr/ADR-001-chain-selection.md), [ADR-006 (Token Policy)](../adr/ADR-006-token-policy.md), [ADR-007 (Fee & Economic Parameters)](../adr/ADR-007-economic-parameters.md), [ADR-010 (Upgradeability)](../adr/ADR-010-upgradeability.md), [ADR-011 (Admin & Custody)](../adr/ADR-011-admin-custody.md), [ADR-015 (Token Authorization)](../adr/ADR-015-token-authorization.md)  
-**Normative References:** [Fee and Rounding Specification](fee-and-rounding-spec.md), [Token Compatibility Specification](../security/token-compatibility.md), [Solana Threat Model](../security/threat-model-solana.md), [Plan.md](../../plan.md) §20-21  
+**Normative References:** [Fee and Rounding Specification](fee-and-rounding-spec.md), [Token Compatibility Specification](../security/token-compatibility.md), [Solana Threat Model](../security/threat-model-solana.md)  
 
 ---
 

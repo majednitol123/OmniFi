@@ -1,57 +1,76 @@
-# Contributing to OmniFi
+# Contributing to OmniFi Protocol
 
-## Current Status
+Thank you for your interest in contributing to OmniFi. We welcome contributions from developers, security researchers, and DeFi protocol engineers.
 
-OmniFi is in **Phase 0: Product Discovery**. No implementation code exists yet. Contributions at this stage are limited to:
+---
 
-- Product requirements review
-- Architecture Decision Record (ADR) proposals and feedback
-- Threat model review
-- Specification review
+## 1. Development Prerequisites
 
-## Development Workflow
+Before contributing code, ensure your local development environment has:
+- **Node.js**: `v20.0.0` or higher (Node 22 recommended)
+- **pnpm**: `v9.0.0` or higher (`npm install -g pnpm`)
+- **Foundry**: Latest stable (`curl -L https://foundry.paradigm.xyz | bash && foundryup`)
+- **Rust & Cargo**: `1.75+` with Solana toolchain (`curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`)
+- **Anchor CLI**: `0.30.0` or higher
+- **Docker & Docker Compose**: For running local persistence and telemetry containers
 
-> This section will be expanded when Phase 2 (Repository and CI Foundation) establishes the CI/CD pipeline.
+---
 
-### Branching Strategy
+## 2. Local Environment Setup
 
-[TO BE DETERMINED via ADR]
+```bash
+# 1. Clone repository
+git clone https://github.com/omnifi/omnifi.git
+cd OmniFi
 
-### Pull Request Process
+# 2. Install workspace dependencies
+pnpm install
 
-1. Every change must include tests and documentation appropriate to the affected layer.
-2. PRs must pass formatting, linting, static analysis, and all applicable tests.
-3. Security-sensitive changes require review from the security reviewer.
-4. On-chain code changes require additional protocol lead review.
+# 3. Compile smart contracts and programs
+make build
 
-### Commit Messages
-
-Use clear, descriptive commit messages. Reference requirement IDs where applicable:
-
-```
-[REQ-004] Add tick-to-price conversion specification
-
-- Define fixed-point format and Q-notation constants
-- Specify rounding direction for tick boundaries
-- Add overflow bounds analysis
+# 4. Run test suites across EVM, Solana, and Monorepo
+make test-all
 ```
 
-## Architecture Decision Records
+---
 
-All material decisions must be documented as ADRs in `docs/adr/`. Use the template at `docs/adr/ADR-000-template.md`.
+## 3. Pull Request Process
 
-## Code of Conduct
+1. **Branching**: Branch off `main` using descriptive naming:
+   - `feat/feature-name`
+   - `fix/bug-description`
+   - `perf/optimization`
+   - `sec/security-hardening`
+2. **Atomic Commits**: Keep commits focused and logically grouped. Use imperative commit messages (`feat: add tick bitmap range search`).
+3. **Test Coverage**: Every PR must include corresponding tests:
+   - EVM changes: Foundry unit tests, invariant fuzz tests, and differential comparisons where applicable.
+   - Solana changes: Anchor/Rust unit and property tests.
+   - TypeScript/API changes: Vitest unit and integration tests.
+4. **Formatting & Linting**:
+   ```bash
+   make fmt-check
+   make lint
+   ```
+5. **Security Verification**:
+   All PRs must pass the unified automated security pipeline prior to review:
+   ```bash
+   make security-all
+   ```
 
-[TO BE DETERMINED]
+---
 
-## Non-Negotiable Rules
+## 4. Engineering Standards & Protocol Principles
 
-From `docs/plan.md` §0.1:
+1. **Zero Floating-Point Arithmetic**: All financial calculations, fee growth tracking, price impacts, and token amounts must use integer arithmetic or fixed-point ($Q64.96$) math. Floating-point types (`number` floats, `f64`) are strictly prohibited in protocol logic.
+2. **Decoupled Key Architecture**: Backend microservices and routing APIs must never accept, hold, or proxy private keys. All signing must occur on the client side.
+3. **Multi-Chain Isolation**: EVM and Solana codebases are independently engineered. Do not introduce cross-runtime leaky abstractions or synthetic bridging contracts.
+4. **Reentrancy Protection**: All state-modifying external methods must enforce reentrancy guards or EIP-1153 transient storage locking.
+5. **Fail-Closed Verification**: Scripts and CI checks must fail closed with exit code 1 upon any anomaly. Never swallow errors with `|| true`.
+6. **Preserve Immutability**: Core pool vaults must remain immutable. Upgrades are restricted to periphery contracts via governance multi-signature quorums.
 
-1. Work in small vertical slices. Each slice must compile, test, document, and pass review.
-2. Never mark a requirement complete because files or function stubs exist.
-3. Never invent chain IDs, RPC URLs, token addresses, program IDs, or credentials.
-4. Keep EVM and Solana implementations separate.
-5. Keep secrets out of source control, logs, test fixtures, and generated docs.
-6. Every change must include tests and documentation.
+---
 
+## 5. Security Vulnerability Reporting
+
+If you discover a security vulnerability, do NOT open a public GitHub issue. Please consult [`SECURITY.md`](SECURITY.md) for our responsible disclosure policy and contact procedures.

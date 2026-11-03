@@ -1,6 +1,6 @@
 /**
  * Network configuration types for OmniFi.
- * Source: plan.md §6, §31.2, ADR-001
+ * Network Configuration & Registry Definitions (ADR-001)
  */
 
 export interface NativeCurrency {

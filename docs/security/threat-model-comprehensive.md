@@ -4,7 +4,7 @@
 **Status:** Certified & Implemented across all 5 Protocol Domains  
 **Date:** 2026-11-03  
 **Standards:** STRIDE, CVSS v3.1, NIST SP 800-53, OWASP Top 10 API Security (2023)  
-**Cross-References:** `security_implemetion.md` Phase 2, `docs/security/threat-model-evm.md`, `docs/security/threat-model-solana.md`, `docs/security/token-compatibility.md`, `docs/security/audit-findings-register.md`
+**Cross-References:** `docs/security/threat-model-evm.md`, `docs/security/threat-model-solana.md`, `docs/security/token-compatibility.md`, `docs/security/audit-findings-register.md`
 
 ---
 

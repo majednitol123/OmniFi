@@ -70,3 +70,18 @@ When v4 is implemented in a later release, existing CLMM pools continue operatin
 
 - Should v4 specification work begin during R1 development (in parallel) or wait for R2 kickoff?
 
+---
+
+## Addendum (Phase 5 Technical Prototype)
+
+- **Date:** 2026-11-03
+- **Status:** Implemented as Technical Demonstration & Research Prototype
+
+Following the stabilization of the core CLMM contracts and invariant verification suites, an advanced prototype of the Uniswap v4-inspired singleton was implemented in `chains/evm/src/v4/OmniFiPoolManager.sol` to validate Cancun EIP-1153 transient storage (`tload`/`tstore`), lock-unlock-settle flash accounting, and net-zero delta invariants.
+
+**Implementation Highlights:**
+1. **Singleton Storage:** Consolidated pool key mappings into a single contract to evaluate multi-hop gas minimization.
+2. **Transient Flash Accounting:** Enforces reentrancy locking and per-currency net settlement (`delta == 0`) inside `unlock()` callbacks using transient storage.
+3. **Safety Invariants:** Full invariant testing (`chains/evm/test/v4/V4Invariant.t.sol`) verifies delta clearance across arbitrary fuzz actions before production mainnet migration.
+4. **Mainnet Rollout Status:** Mainnet initial liquidity deployment remains on canonical CLMM per-pool contracts (`OmniFiPool.sol`), with `OmniFiPoolManager.sol` retained as our verified reference architecture for Cancun-enabled EVM networks.
+

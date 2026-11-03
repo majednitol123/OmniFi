@@ -1,7 +1,7 @@
 /*
  * OmniFi Protocol — Certora Formal Verification Specification
  * Target: OmniFiPool (Concentrated Liquidity Core)
- * Documented per security_implemetion.md §2.A & Phase 3
+ * Documented per OmniFi Formal Verification Specification
  */
 
 methods {

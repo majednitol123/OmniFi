@@ -3,7 +3,7 @@ import { parseEvmRevert, EvmError } from '../errors/evm';
 import { parseSolanaProgramError, SolanaProgramErrorCode, SolanaError } from '../errors/solana';
 import { toUserMessage } from '../errors/user-facing';
 
-describe('Chain-Specific Error Taxonomy (plan.md §25)', () => {
+describe('Chain-Specific Error Taxonomy', () => {
   describe('EVM Revert Parsing', () => {
     it('parses slippage breach revert into 5000 with actionable message', () => {
       const err = parseEvmRevert('SlippageExceeded()', '0xabc123', '1000000');

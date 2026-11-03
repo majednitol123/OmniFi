@@ -8,7 +8,7 @@ import {
 } from '../registry';
 import { NetworkConfigSchema } from '../schema';
 
-describe('Network Registry (plan.md §6, §31.2, ADR-001)', () => {
+describe('Network Registry (ADR-001)', () => {
   it('loads and validates all static network configs against Zod schema', () => {
     const all = listNetworks();
     expect(all.length).toBeGreaterThanOrEqual(4);

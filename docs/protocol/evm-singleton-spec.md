@@ -6,7 +6,7 @@
 **Scope:** Architecture specification for EVM Singleton Pool Manager, Flash Accounting, and Transient Delta Accounting  
 **Target EVM:** Cancun (`solc 0.8.26` with EIP-1153 `TSTORE` / `TLOAD`)  
 **Related ADRs:** [ADR-004 (v4 Singleton Scope)](../adr/ADR-004-v4-singleton-scope.md), [ADR-007 (Economic Parameters)](../adr/ADR-007-economic-parameters.md), [ADR-010 (Upgradeability)](../adr/ADR-010-upgradeability.md), [ADR-015 (Token Authorization)](../adr/ADR-015-token-authorization.md)  
-**Normative References:** [EVM CLMM Specification](evm-clmm-spec.md), [Fee and Rounding Specification](fee-and-rounding-spec.md), [Plan.md](../../plan.md) §15, §46
+**Normative References:** [EVM CLMM Specification](evm-clmm-spec.md), [Fee and Rounding Specification](fee-and-rounding-spec.md)
 
 ---
 

@@ -6,7 +6,7 @@
 **Author:** OmniFi Core Protocol Team  
 **Scope:** Reference AMM Implementation  
 **Related ADRs:** [ADR-002 (V2 Inclusion)](../adr/ADR-002-v2-inclusion.md), [ADR-006 (Token Policy)](../adr/ADR-006-token-policy.md), [ADR-007 (Fee & Economic Parameters)](../adr/ADR-007-economic-parameters.md), [ADR-011 (Admin & Custody)](../adr/ADR-011-admin-custody.md)  
-**Normative Reference:** [Fee and Rounding Specification](fee-and-rounding-spec.md), [Plan.md](../../plan.md) §13
+**Normative Reference:** [Fee and Rounding Specification](fee-and-rounding-spec.md)
 
 ---
 
@@ -303,7 +303,7 @@ All state-changing operations strictly adhere to the Checks-Effects-Interactions
 
 ### 3.2 External Call Isolation & Callbacks
 
-Per project safety guidelines ([plan.md](../../plan.md) §0.1 rule 9):
+Per protocol safety guidelines:
 - OmniFi V2 does **not** permit arbitrary external callbacks, custom hook execution, or flash loan callbacks to untrusted contracts.
 - Token transfers are performed strictly to verified recipients via standard safe transfer patterns.
 - Token contracts with reentrancy side-effects (e.g., ERC-777 tokens) are prohibited per [ADR-006](../adr/ADR-006-token-policy.md).

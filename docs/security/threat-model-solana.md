@@ -3,7 +3,7 @@
 **Version:** 2.0  
 **Status:** Implemented & Verified — mapped to remediated Anchor programs and Cargo test suites  
 **Date:** 2026-11-03  
-**Source:** `security_implemetion.md` Phase 2, plan.md §28, §20-23  
+**Reference:** OmniFi Solana Program Architecture & Security Baseline  
 **Spec References:** `solana-amm-spec.md`, `solana-clmm-spec.md`, `fee-and-rounding-spec.md`, `token-compatibility.md`
 
 ---

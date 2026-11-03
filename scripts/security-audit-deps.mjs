@@ -50,34 +50,23 @@ try {
     const data = JSON.parse(err.stdout);
     const advisories = Object.values(data.advisories || {});
     
-    // Segregate frontend (apps/web Next.js residual risks) vs backend services
+    // Filter for production dependencies
     const backendHighCritical = [];
-    const webResidualRisks = [];
 
     for (const adv of advisories) {
       if (adv.severity === 'high' || adv.severity === 'critical') {
         const prodPaths = (adv.findings || []).filter(f => !f.dev).flatMap(f => f.paths);
-        const hasBackend = prodPaths.some(p => !p.startsWith('apps/web') && !p.startsWith('apps__web'));
-        const hasWeb = prodPaths.some(p => p.startsWith('apps/web') || p.startsWith('apps__web'));
-
-        if (hasBackend) {
+        if (prodPaths.length > 0) {
           backendHighCritical.push({
             module: adv.module_name,
             severity: adv.severity,
             title: adv.title,
             patched: adv.patched_versions,
           });
-        } else if (hasWeb) {
-          webResidualRisks.push({
-            module: adv.module_name,
-            severity: adv.severity,
-            title: adv.title,
-          });
         }
       }
     }
 
-    console.log(`   Frontend Residual Risks (apps/web): ${webResidualRisks.length} advisories (documented in residual-risk-register.md)`);
     console.log(`   Backend Production Critical/High Advisories: ${backendHighCritical.length}`);
 
     // If unexpected new critical vulnerabilities emerge in core backend services, trigger failure

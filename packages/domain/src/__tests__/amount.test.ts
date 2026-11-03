@@ -5,7 +5,7 @@ import { ceilDiv, mulDivDown, mulDivUp, mulDiv, MAX_UINT256 } from '../math';
 import { RoundingDirection, OPERATION_ROUNDING_POLICY } from '../rounding';
 import { formatAmount, parseAmount } from '../formatting';
 
-describe('Amount & Integer Arithmetic Utilities (plan.md §10.2)', () => {
+describe('Amount & Integer Arithmetic Utilities', () => {
   const dummyAsset: AssetRef = {
     namespace: 'eip155',
     chainRef: '1',

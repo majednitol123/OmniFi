@@ -12,9 +12,8 @@ packages/token-registry/ @omnifi/core-team
 packages/api-client/ @omnifi/core-team
 packages/test-vectors/ @omnifi/core-team
 
-# Apps
-apps/web/ @omnifi/frontend-team
-apps/api/ @omnifi/backend-team
+# Services & Routing
+services/ @omnifi/backend-team
 
 # CI / Infrastructure / Security
 .github/ @omnifi/security-team
