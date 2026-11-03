@@ -289,7 +289,7 @@ library Pool {
                 uint256 deltaProtocolFee =
                     FullMath.mulDiv(step.feeAmount, _slot0.protocolFee, 1_000_000);
                 step.feeAmount -= deltaProtocolFee;
-                state.protocolFee += uint128(deltaProtocolFee);
+                state.protocolFee += deltaProtocolFee.toUint128();
             }
 
             if (state.liquidity > 0) {

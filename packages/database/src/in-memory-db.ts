@@ -83,6 +83,25 @@ export class InMemoryDatabaseClient implements OmniFiDatabaseClient {
     return result;
   }
 
+  public async updatePoolState(
+    poolId: string,
+    state: {
+      reserve0?: bigint;
+      reserve1?: bigint;
+      sqrtPriceX64?: bigint;
+      currentTick?: number;
+      liquidity?: bigint;
+      protocolFeeFraction?: number;
+    },
+  ): Promise<void> {
+    const existing = this.pools.get(poolId);
+    if (!existing) return;
+    this.pools.set(poolId, {
+      ...existing,
+      ...state,
+    });
+  }
+
   // Swaps (with unique composite constraint (networkId, txHash, eventIndex))
   public async insertSwap(swap: DbSwap): Promise<void> {
     const compositeKey = `${swap.networkId}:${swap.txHash}:${swap.eventIndex}`;

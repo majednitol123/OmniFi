@@ -26,6 +26,17 @@ export function TokenSelectorModal({
     setMounted(true);
   }, []);
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen || !mounted) return null;
 
   const filtered = tokens.filter((t) => {
@@ -40,22 +51,25 @@ export function TokenSelectorModal({
   const modalElement = (
     <div
       className="modal-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Select Asset Dialog"
       onClick={onClose}
       style={{
         position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
+        inset: 0,
         width: '100vw',
         height: '100vh',
-        background: 'rgba(4, 6, 9, 0.82)',
+        background: 'rgba(4, 6, 9, 0.85)',
         backdropFilter: 'blur(8px)',
         display: 'flex',
+        flexDirection: 'column',
         alignItems: 'center',
-        justifyContent: 'center',
+        justifyContent: 'flex-start',
         zIndex: 99999,
-        padding: '1.5rem',
+        padding: '2.5rem 1rem 2rem',
+        overflowY: 'auto',
+        boxSizing: 'border-box',
       }}
     >
       <div
@@ -68,8 +82,14 @@ export function TokenSelectorModal({
           padding: '1.5rem',
           width: '100%',
           maxWidth: '460px',
-          margin: 'auto',
+          maxHeight: 'min(88vh, 580px)',
+          overflowY: 'auto',
+          marginTop: 'auto',
+          marginBottom: 'auto',
+          marginLeft: 'auto',
+          marginRight: 'auto',
           position: 'relative',
+          boxSizing: 'border-box',
         }}
         onClick={(e) => e.stopPropagation()}
       >

@@ -2,6 +2,7 @@
 name = "omnifi_amm"
 version = "0.1.0"
 description = "OmniFi Solana Native Constant-Product AMM Program"
+license = "MIT OR Apache-2.0"
 edition = "2021"
 
 [lib]

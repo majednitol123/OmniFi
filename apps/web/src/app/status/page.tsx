@@ -46,9 +46,13 @@ export default function StatusDashboardPage() {
 
   const formatUsdCompact = (val: any, fallback: string = '$0') => {
     if (val === undefined || val === null || val === '') return fallback;
-    const num = typeof val === 'number' ? val : parseFloat(val.toString());
+    const clean = val.toString().replace(/[^0-9.-]/g, '');
+    const num = typeof val === 'number' ? val : parseFloat(clean);
     if (isNaN(num)) return fallback;
-    if (num >= 1e12) return `$${(num / 1e12).toFixed(2)}T`;
+    if (num >= 1e12) {
+      const trillions = num / 1e12;
+      return trillions >= 1000 ? `$${trillions.toLocaleString(undefined, { maximumFractionDigits: 0 })}T` : `$${trillions.toFixed(2)}T`;
+    }
     if (num >= 1e9) return `$${(num / 1e9).toFixed(2)}B`;
     if (num >= 1e6) return `$${(num / 1e6).toFixed(2)}M`;
     if (num >= 1e3) return `$${(num / 1e3).toFixed(2)}K`;
@@ -57,7 +61,8 @@ export default function StatusDashboardPage() {
 
   const formatUsdFull = (val: any, fallback: string = '$0') => {
     if (val === undefined || val === null || val === '') return fallback;
-    const num = typeof val === 'number' ? val : parseFloat(val.toString());
+    const clean = val.toString().replace(/[^0-9.-]/g, '');
+    const num = typeof val === 'number' ? val : parseFloat(clean);
     if (isNaN(num)) return fallback;
     return `$${num.toLocaleString()}`;
   };

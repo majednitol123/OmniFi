@@ -21,13 +21,16 @@ contract OmniFiPoolManager is IOmniFiPoolManager {
     using Pool for Pool.State;
 
     address public owner;
-    address public protocolFeeController;
+    address public immutable protocolFeeController;
 
     mapping(PoolId => Pool.State) internal _pools;
 
     modifier onlyUnlocked() {
         if (TransientStorage.tload(TransientStorage.LOCK_SLOT) != 1) {
             revert NotUnlocked();
+        }
+        if (msg.sender != address(uint160(TransientStorage.tload(TransientStorage.ACTIVE_LOCKER_SLOT)))) {
+            revert NotActiveLocker();
         }
         _;
     }
@@ -48,8 +51,9 @@ contract OmniFiPoolManager is IOmniFiPoolManager {
             revert AlreadyUnlocked();
         }
 
-        // Set lock flag
+        // Set lock flag and register active locker
         TransientStorage.tstore(TransientStorage.LOCK_SLOT, 1);
+        TransientStorage.tstore(TransientStorage.ACTIVE_LOCKER_SLOT, uint256(uint160(msg.sender)));
 
         // Execute caller callback
         result = IUnlockCallback(msg.sender).unlockCallback(data);
@@ -68,8 +72,9 @@ contract OmniFiPoolManager is IOmniFiPoolManager {
             }
         }
 
-        // Clear lock flag
+        // Clear lock flag and active locker
         TransientStorage.tstore(TransientStorage.LOCK_SLOT, 0);
+        TransientStorage.tstore(TransientStorage.ACTIVE_LOCKER_SLOT, 0);
     }
 
     /// @inheritdoc IOmniFiPoolManager

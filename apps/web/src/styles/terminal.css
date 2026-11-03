@@ -137,6 +137,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   min-width: 0;
   overflow: hidden;
   position: relative;
+  box-sizing: border-box;
 }
 
 .stat-label {
@@ -151,13 +152,14 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 }
 
 .stat-value {
-  font-size: 1.6rem;
+  font-size: 1.45rem;
   font-weight: 800;
   font-family: var(--font-mono);
   color: #fff;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  letter-spacing: -0.01em;
   max-width: 100%;
 }
 
@@ -340,13 +342,18 @@ input[type=number] {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(4, 6, 9, 0.82);
+  width: 100vw;
+  height: 100vh;
+  background: rgba(4, 6, 9, 0.85);
   backdrop-filter: blur(8px);
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: 1rem;
+  justify-content: flex-start;
+  z-index: 10000;
+  padding: 2.5rem 1rem 2rem;
+  overflow-y: auto;
+  box-sizing: border-box;
   animation: fadeIn 0.15s ease-out;
 }
 
@@ -356,10 +363,16 @@ input[type=number] {
   border-radius: 16px;
   box-shadow: var(--shadow-modal);
   width: 100%;
-  max-width: 440px;
-  max-height: 85vh;
+  max-width: 460px;
+  max-height: min(88vh, 600px);
+  margin-top: auto;
+  margin-bottom: auto;
+  margin-left: auto;
+  margin-right: auto;
   display: flex;
   flex-direction: column;
+  overflow-y: auto;
+  box-sizing: border-box;
   animation: scaleUp 0.15s ease-out;
 }
 

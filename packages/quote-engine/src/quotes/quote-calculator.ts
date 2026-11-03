@@ -183,15 +183,17 @@ export function calculateHopOutput(hop: RouteHop, amountIn: bigint): HopExecutio
         idealHopOutput = (amountIn * state.sqrtPriceX96 * state.sqrtPriceX96) >> 192n;
         // Incur slippage relative to liquidity
         const slippageDenominator = state.liquidity > 0n ? state.liquidity : 1_000_000_000_000n;
-        const slippageBps = Number((amountIn * 10000n) / (slippageDenominator + amountIn));
-        amountOut = (idealHopOutput * (10000n - BigInt(Math.min(9999, slippageBps)))) / 10000n;
+        const slippageBps = (amountIn * 10000n) / (slippageDenominator + amountIn);
+        const clampedBps = slippageBps > 9999n ? 9999n : slippageBps;
+        amountOut = (idealHopOutput * (10000n - clampedBps)) / 10000n;
       } else {
         const denom = state.sqrtPriceX96 * state.sqrtPriceX96;
         if (denom > 0n) {
           idealHopOutput = (amountIn << 192n) / denom;
           const slippageDenominator = state.liquidity > 0n ? state.liquidity : 1_000_000_000_000n;
-          const slippageBps = Number((amountIn * 10000n) / (slippageDenominator + amountIn));
-          amountOut = (idealHopOutput * (10000n - BigInt(Math.min(9999, slippageBps)))) / 10000n;
+          const slippageBps = (amountIn * 10000n) / (slippageDenominator + amountIn);
+          const clampedBps = slippageBps > 9999n ? 9999n : slippageBps;
+          amountOut = (idealHopOutput * (10000n - clampedBps)) / 10000n;
         }
       }
 

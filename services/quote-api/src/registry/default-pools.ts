@@ -1,5 +1,95 @@
-import { AssetRef, PoolRef } from '@omnifi/domain';
+import { OmniFiDatabaseClient } from '@omnifi/database';
+import { AssetRef, ChainNamespace, PoolRef, PoolType } from '@omnifi/domain';
 import { PoolGraph } from '@omnifi/quote-engine';
+
+export async function loadGraphFromDatabase(db: OmniFiDatabaseClient): Promise<PoolGraph> {
+  const graph = new PoolGraph();
+  const [dbPools, dbTokens, dbNetworks] = await Promise.all([
+    db.listPools(),
+    db.listTokens(),
+    db.listNetworks(),
+  ]);
+
+  if (dbPools.length === 0) {
+    return createDefaultGraph();
+  }
+
+  const tokensMap = new Map(dbTokens.map((t) => [t.tokenId, t]));
+  const networksMap = new Map(dbNetworks.map((n) => [n.networkId, n]));
+
+  for (const pool of dbPools) {
+    if (pool.isPaused) continue;
+    const token0 = tokensMap.get(pool.token0Id);
+    const token1 = tokensMap.get(pool.token1Id);
+    const network = networksMap.get(pool.networkId);
+
+    if (!token0 || !token1 || !network) continue;
+
+    const token0Ref: AssetRef = {
+      namespace: network.namespace as ChainNamespace,
+      chainRef: network.chainRef,
+      address: token0.address,
+    };
+
+    const token1Ref: AssetRef = {
+      namespace: network.namespace as ChainNamespace,
+      chainRef: network.chainRef,
+      address: token1.address,
+    };
+
+    let poolType: PoolType;
+    let state: unknown;
+
+    if (network.namespace === 'eip155') {
+      if (pool.protocol === 'v2' || pool.protocol === 'clmm') {
+        poolType = 'v2';
+        state = {
+          reserve0: pool.reserve0 ?? 0n,
+          reserve1: pool.reserve1 ?? 0n,
+        };
+      } else {
+        continue;
+      }
+    } else if (network.namespace === 'solana') {
+      if (pool.protocol === 'amm') {
+        poolType = 'solana_amm';
+        state = {
+          reserve0: pool.reserve0 ?? 0n,
+          reserve1: pool.reserve1 ?? 0n,
+          protocolFeeFraction: pool.protocolFeeFraction ?? 0,
+        };
+      } else if (pool.protocol === 'clmm') {
+        poolType = 'solana_clmm';
+        state = {
+          sqrtPriceX64: pool.sqrtPriceX64 ?? 18446744073709551616n,
+          currentTick: pool.currentTick ?? 0,
+          liquidity: pool.liquidity ?? 0n,
+          tickSpacing: pool.tickSpacing ?? 10,
+        };
+      } else {
+        continue;
+      }
+    } else {
+      continue;
+    }
+
+    const poolRef: PoolRef = {
+      poolId: pool.poolId,
+      namespace: network.namespace as ChainNamespace,
+      chainRef: network.chainRef,
+      poolType,
+      token0: token0Ref,
+      token1: token1Ref,
+      feeTier: pool.feeTier,
+      ...(pool.tickSpacing !== undefined ? { tickSpacing: pool.tickSpacing } : {}),
+      state,
+    };
+
+    graph.addPool(poolRef);
+  }
+
+  return graph;
+}
 
 export const ETH_USDC: AssetRef = {
   namespace: 'eip155',

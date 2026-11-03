@@ -39,6 +39,7 @@ contract OmniFiPool is IOmniFiPool {
     error InsufficientToken0();
     error InsufficientToken1();
     error InvalidPriceLimit();
+    error InvalidProtocolFeeFraction();
 
     address public immutable override factory;
     address public immutable override token0;
@@ -389,7 +390,7 @@ contract OmniFiPool is IOmniFiPool {
             if (_slot0.protocolFeeFraction > 0) {
                 uint256 deltaProtocolFee = (step.feeAmount * _slot0.protocolFeeFraction) / 4;
                 step.feeAmount -= deltaProtocolFee;
-                state.protocolFee += uint128(deltaProtocolFee);
+                state.protocolFee += SafeCast.toUint128(deltaProtocolFee);
             }
 
             if (state.liquidity > 0) {
@@ -457,7 +458,7 @@ contract OmniFiPool is IOmniFiPool {
 
     /// @inheritdoc IOmniFiPool
     function setProtocolFeeFraction(uint8 newFraction) external override onlyFactoryOwner {
-        require(newFraction <= 4);
+        if (newFraction > 4) revert InvalidProtocolFeeFraction();
         uint8 oldFraction = slot0.protocolFeeFraction;
         slot0.protocolFeeFraction = newFraction;
         emit SetProtocolFeeFraction(oldFraction, newFraction);

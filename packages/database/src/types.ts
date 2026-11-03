@@ -29,6 +29,12 @@ export interface DbPool {
   token1Id: string;
   feeTier: number;
   tickSpacing?: number | undefined;
+  reserve0?: bigint | undefined;
+  reserve1?: bigint | undefined;
+  sqrtPriceX64?: bigint | undefined;
+  currentTick?: number | undefined;
+  liquidity?: bigint | undefined;
+  protocolFeeFraction?: number | undefined;
   isPaused: boolean;
   createdAt: Date;
 }

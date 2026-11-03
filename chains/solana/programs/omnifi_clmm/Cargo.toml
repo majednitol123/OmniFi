@@ -2,6 +2,7 @@
 name = "omnifi_clmm"
 version = "0.1.0"
 description = "OmniFi Solana Native Concentrated Liquidity AMM Program"
+license = "MIT OR Apache-2.0"
 edition = "2021"
 
 [lib]

@@ -51,6 +51,11 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   } else if (address && walletType === 'solana') {
     if (selectedNetworkId.startsWith('eip155:')) {
       isNetworkMismatch = true;
+    } else {
+      const selectedCluster = selectedNetworkId.split(':')[1];
+      if (cluster !== null && selectedCluster && cluster !== selectedCluster) {
+        isNetworkMismatch = true;
+      }
     }
   }
 
@@ -86,8 +91,14 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       }
       const solana = (window as any).solana;
       const resp = await solana.connect();
+      const detectedCluster =
+        (solana as any).cluster ||
+        (solana as any).network ||
+        (selectedNetworkId.startsWith('solana:') ? selectedNetworkId.split(':')[1] : null) ||
+        (process.env.NEXT_PUBLIC_SOLANA_CLUSTER as any) ||
+        'mainnet-beta';
       setAddress(resp.publicKey.toBase58());
-      setCluster('mainnet-beta');
+      setCluster(detectedCluster as 'mainnet-beta' | 'devnet' | 'localnet');
       setWalletType('solana');
     } catch (err: any) {
       setError(err?.message || 'Failed to connect Solana wallet');

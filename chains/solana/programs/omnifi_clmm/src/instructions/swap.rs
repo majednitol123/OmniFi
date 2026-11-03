@@ -91,6 +91,28 @@ pub fn process_swap(
         ClmmError::InvalidStartTickIndex
     );
 
+    // Verify contiguity and correct sequencing of subsequent tick arrays in trade direction
+    let ticks_per_array = (TICK_ARRAY_SIZE as i32)
+        .checked_mul(pool.tick_spacing as i32)
+        .ok_or(ClmmError::MathOverflow)?;
+    for i in 1..tick_arrays.len() {
+        let expected_start = if zero_for_one {
+            tick_arrays[i - 1]
+                .start_tick_index
+                .checked_sub(ticks_per_array)
+                .ok_or(ClmmError::MathOverflow)?
+        } else {
+            tick_arrays[i - 1]
+                .start_tick_index
+                .checked_add(ticks_per_array)
+                .ok_or(ClmmError::MathOverflow)?
+        };
+        require!(
+            tick_arrays[i].start_tick_index == expected_start,
+            ClmmError::InvalidTickArraySequence
+        );
+    }
+
     let mut current_array_idx = 0usize;
     let mut amount_remaining = amount;
     let mut total_amount_in = 0u64;
@@ -275,13 +297,18 @@ pub fn process_swap(
         pool.protocol_fees_token_1 = pool.protocol_fees_token_1.checked_add(protocol_fee).ok_or(ClmmError::MathOverflow)?;
     }
 
-    // Slippage enforcement
+    // Slippage & exact-output fulfillment enforcement
     if is_exact_input {
         require!(
             total_amount_out >= other_amount_threshold,
             ClmmError::SlippageExceeded
         );
     } else {
+        // Exact-output swaps must fully satisfy requested output amount
+        require!(
+            amount_remaining == 0,
+            ClmmError::SlippageExceeded
+        );
         let total_in_with_fee = total_amount_in
             .checked_add(total_fee_amount)
             .ok_or(ClmmError::MathOverflow)?;

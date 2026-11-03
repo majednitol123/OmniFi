@@ -5,7 +5,9 @@
   "description": "Solana programs and tests for OmniFi",
   "scripts": {
     "build": "anchor build",
-    "test": "cargo test",
+    "test": "cargo test && ts-mocha -p ./tsconfig.json tests/integration.test.ts",
+    "test:cargo": "cargo test",
+    "test:integration": "ts-mocha -p ./tsconfig.json tests/integration.test.ts",
     "test:anchor": "anchor test",
     "lint": "cargo clippy -- -D warnings",
     "fmt": "cargo fmt --all",

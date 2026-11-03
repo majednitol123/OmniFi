@@ -32,6 +32,9 @@ contract OmniFiV2Handler is Test {
         uint256 amountIn = bound(amountInRaw, 1000, maxIn);
         if (amountIn == 0) return;
 
+        uint256 amountInAfterFee = (amountIn * 997000) / 1000000;
+        if (amountInAfterFee == 0 || (uint256(r1) * amountInAfterFee) < (uint256(r0) + amountInAfterFee)) return;
+
         uint256 expectedOut = OmniFiV2Library.getAmountOut(amountIn, r0, r1, 3000);
         if (expectedOut == 0 || expectedOut >= r1) return;
 
@@ -54,6 +57,9 @@ contract OmniFiV2Handler is Test {
         // Bound amountIn between 1000 and r1 / 2 (prevent 100% drain and zero output)
         uint256 amountIn = bound(amountInRaw, 1000, maxIn);
         if (amountIn == 0) return;
+
+        uint256 amountInAfterFee = (amountIn * 997000) / 1000000;
+        if (amountInAfterFee == 0 || (uint256(r0) * amountInAfterFee) < (uint256(r1) + amountInAfterFee)) return;
 
         uint256 expectedOut = OmniFiV2Library.getAmountOut(amountIn, r1, r0, 3000);
         if (expectedOut == 0 || expectedOut >= r0) return;

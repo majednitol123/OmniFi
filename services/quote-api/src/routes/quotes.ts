@@ -60,8 +60,53 @@ export function registerQuoteRoutes(fastify: FastifyInstance, graph: PoolGraph) 
       );
     }
 
-    const tokenIn = resolveAssetRef(rawTokenIn);
-    const tokenOut = resolveAssetRef(rawTokenOut);
+    const resolveAsset = (raw: string, paramName: string) => {
+      if (!raw) return { error: 'missing' };
+      if (raw.includes(':')) {
+        const parsed = parseAssetRef(raw);
+        if (!parsed) return { error: 'malformed', paramName };
+        return { asset: parsed };
+      }
+      // If it is a bare symbol (e.g. 'USDC', 'ETH', 'BTC'), reject as malformed (symbol-only forbidden per §10.1)
+      if (!raw.startsWith('0x') && raw.length < 32) {
+        return { error: 'malformed', paramName };
+      }
+      // If it is a valid hex address or base58 address, resolve from pool graph
+      for (const p of graph.allPools()) {
+        if (p.token0.address.toLowerCase() === raw.toLowerCase()) return { asset: p.token0 };
+        if (p.token1.address.toLowerCase() === raw.toLowerCase()) return { asset: p.token1 };
+      }
+      return { error: 'not_found' };
+    };
+
+    const resIn = resolveAsset(rawTokenIn, 'tokenIn');
+    if (resIn.error === 'malformed') {
+      quoteRequestsTotal.inc({ status: 'bad_request' });
+      return sendProblemDetails(
+        reply,
+        400,
+        'Invalid Request Parameters',
+        `Token identifier "${rawTokenIn}" is malformed. Symbol-only asset identifiers are prohibited (§10.1). Use CAIP-19 asset reference or contract address.`,
+        request.url,
+        [{ name: 'tokenIn', reason: 'Must be a valid CAIP-19 asset reference or address' }],
+      );
+    }
+
+    const resOut = resolveAsset(rawTokenOut, 'tokenOut');
+    if (resOut.error === 'malformed') {
+      quoteRequestsTotal.inc({ status: 'bad_request' });
+      return sendProblemDetails(
+        reply,
+        400,
+        'Invalid Request Parameters',
+        `Token identifier "${rawTokenOut}" is malformed. Symbol-only asset identifiers are prohibited (§10.1). Use CAIP-19 asset reference or contract address.`,
+        request.url,
+        [{ name: 'tokenOut', reason: 'Must be a valid CAIP-19 asset reference or address' }],
+      );
+    }
+
+    const tokenIn = resIn.asset;
+    const tokenOut = resOut.asset;
 
     if (!tokenIn || !tokenOut) {
       quoteRequestsTotal.inc({ status: 'token_not_found' });

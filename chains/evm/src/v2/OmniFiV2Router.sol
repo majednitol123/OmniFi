@@ -6,10 +6,11 @@ import { IOmniFiV2Factory } from "../interfaces/IOmniFiV2Factory.sol";
 import { IOmniFiV2Pair } from "../interfaces/IOmniFiV2Pair.sol";
 import { OmniFiV2Library } from "./libraries/OmniFiV2Library.sol";
 import { TransferHelper } from "./libraries/TransferHelper.sol";
+import { Multicall } from "../periphery/Multicall.sol";
 
 /// @title OmniFi V2 Router
 /// @notice Periphery contract for multi-hop swaps, slippage enforcement, and liquidity management
-contract OmniFiV2Router is IOmniFiV2Router {
+contract OmniFiV2Router is IOmniFiV2Router, Multicall {
     address public immutable override factory;
 
     modifier ensure(uint256 deadline) {

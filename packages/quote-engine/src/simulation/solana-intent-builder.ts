@@ -14,7 +14,13 @@ import {
   OMNIFI_CLMM_PROGRAM_ID,
   TICK_ARRAY_SIZE,
 } from '@omnifi/sdk-solana';
-import { Connection, PublicKey, TransactionInstruction } from '@solana/web3.js';
+import {
+  Connection,
+  PublicKey,
+  TransactionInstruction,
+  TransactionMessage,
+  VersionedTransaction,
+} from '@solana/web3.js';
 
 export interface BuildSolanaClmmSwapIntentParams {
   quote: SwapQuote;
@@ -145,12 +151,34 @@ export async function simulateSolanaIntent(
       });
     });
 
-    // In a real environment, this compiles to a VersionedTransaction or Transaction
-    // and calls connection.simulateTransaction.
+    const signerAccount = ixs.flatMap((i) => i.keys).find((k) => k.isSigner);
+    const payerKey = signerAccount ? signerAccount.pubkey : new PublicKey('11111111111111111111111111111111');
+    const { blockhash } = await connection.getLatestBlockhash('confirmed');
+    const messageV0 = new TransactionMessage({
+      payerKey,
+      recentBlockhash: blockhash,
+      instructions: ixs,
+    }).compileToV0Message();
+    const versionedTx = new VersionedTransaction(messageV0);
+
+    const simRes = await connection.simulateTransaction(versionedTx, {
+      sigVerify: false,
+      replaceRecentBlockhash: true,
+    });
+
+    if (simRes.value.err) {
+      return {
+        success: false,
+        unitsConsumed: simRes.value.unitsConsumed ?? 0,
+        logs: simRes.value.logs ?? [],
+        error: JSON.stringify(simRes.value.err),
+      };
+    }
+
     return {
       success: true,
-      unitsConsumed: intent.estimatedComputeUnits ?? 200_000,
-      logs: ['Program omnifi_clmm invoke [1]', 'Program omnifi_clmm success'],
+      unitsConsumed: simRes.value.unitsConsumed ?? intent.estimatedComputeUnits ?? 200_000,
+      logs: simRes.value.logs ?? ['Program simulation completed successfully'],
     };
   } catch (err: any) {
     return {

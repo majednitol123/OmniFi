@@ -122,6 +122,31 @@ export class EvmScanner {
           createdAt: new Date(),
         });
         processed++;
+      } else if (decoded.type === 'V2_SYNC') {
+        await this.db.insertChainEvent({
+          eventId: `${this.config.networkId}:${decoded.txHash}:${decoded.logIndex}:sync`,
+          networkId: this.config.networkId,
+          txHash: decoded.txHash,
+          logIndex: decoded.logIndex,
+          blockNumberOrSlot: decoded.blockNumber,
+          blockHash: decoded.blockHash,
+          eventName: 'Sync',
+          payload: {
+            poolAddress: decoded.poolAddress,
+            reserve0: decoded.reserve0.toString(),
+            reserve1: decoded.reserve1.toString(),
+          },
+          finalized: decoded.blockNumber <= currentFinalizedBlock,
+          createdAt: new Date(),
+        });
+
+        // Persist reserve update to database pools
+        await this.db.updatePoolState(decoded.poolAddress.toLowerCase(), {
+          reserve0: decoded.reserve0,
+          reserve1: decoded.reserve1,
+        });
+
+        processed++;
       } else if (decoded.type === 'CLMM_SWAP') {
         const amount0In = decoded.amount0 > 0n ? decoded.amount0 : 0n;
         const amount1In = decoded.amount1 > 0n ? decoded.amount1 : 0n;
@@ -147,6 +172,14 @@ export class EvmScanner {
           finalized: decoded.blockNumber <= currentFinalizedBlock,
           createdAt: new Date(),
         });
+
+        // Persist CLMM state update (price, tick, liquidity)
+        await this.db.updatePoolState(decoded.poolAddress.toLowerCase(), {
+          sqrtPriceX64: decoded.sqrtPriceX96,
+          currentTick: decoded.tick,
+          liquidity: decoded.liquidity,
+        });
+
         processed++;
       }
     }
@@ -154,4 +187,3 @@ export class EvmScanner {
     return processed;
   }
 }
-

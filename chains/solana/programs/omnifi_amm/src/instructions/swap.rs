@@ -130,15 +130,19 @@ pub fn process_swap_exact_input(
         amount_out,
     )?;
 
-    // 3. Update reserves
+    // 3. Update reserves (LP reserve excludes protocol fees to prevent vault desync)
+    let reserve_in_increase = amount_in
+        .checked_sub(protocol_fee)
+        .ok_or(ErrorCode::MathOverflow)?;
+
     if zero_for_one {
-        pool.reserve_0 = pool.reserve_0.checked_add(amount_in).ok_or(ErrorCode::MathOverflow)?;
+        pool.reserve_0 = pool.reserve_0.checked_add(reserve_in_increase).ok_or(ErrorCode::MathOverflow)?;
         pool.reserve_1 = pool.reserve_1.checked_sub(amount_out).ok_or(ErrorCode::MathOverflow)?;
         if protocol_fee > 0 {
             pool.protocol_fees_0 = pool.protocol_fees_0.checked_add(protocol_fee).ok_or(ErrorCode::MathOverflow)?;
         }
     } else {
-        pool.reserve_1 = pool.reserve_1.checked_add(amount_in).ok_or(ErrorCode::MathOverflow)?;
+        pool.reserve_1 = pool.reserve_1.checked_add(reserve_in_increase).ok_or(ErrorCode::MathOverflow)?;
         pool.reserve_0 = pool.reserve_0.checked_sub(amount_out).ok_or(ErrorCode::MathOverflow)?;
         if protocol_fee > 0 {
             pool.protocol_fees_1 = pool.protocol_fees_1.checked_add(protocol_fee).ok_or(ErrorCode::MathOverflow)?;
@@ -231,15 +235,19 @@ pub fn process_swap_exact_output(
         amount_out,
     )?;
 
-    // 3. Update reserves
+    // 3. Update reserves (LP reserve excludes protocol fees to prevent vault desync)
+    let reserve_in_increase = amount_in
+        .checked_sub(protocol_fee)
+        .ok_or(ErrorCode::MathOverflow)?;
+
     if zero_for_one {
-        pool.reserve_0 = pool.reserve_0.checked_add(amount_in).ok_or(ErrorCode::MathOverflow)?;
+        pool.reserve_0 = pool.reserve_0.checked_add(reserve_in_increase).ok_or(ErrorCode::MathOverflow)?;
         pool.reserve_1 = pool.reserve_1.checked_sub(amount_out).ok_or(ErrorCode::MathOverflow)?;
         if protocol_fee > 0 {
             pool.protocol_fees_0 = pool.protocol_fees_0.checked_add(protocol_fee).ok_or(ErrorCode::MathOverflow)?;
         }
     } else {
-        pool.reserve_1 = pool.reserve_1.checked_add(amount_in).ok_or(ErrorCode::MathOverflow)?;
+        pool.reserve_1 = pool.reserve_1.checked_add(reserve_in_increase).ok_or(ErrorCode::MathOverflow)?;
         pool.reserve_0 = pool.reserve_0.checked_sub(amount_out).ok_or(ErrorCode::MathOverflow)?;
         if protocol_fee > 0 {
             pool.protocol_fees_1 = pool.protocol_fees_1.checked_add(protocol_fee).ok_or(ErrorCode::MathOverflow)?;

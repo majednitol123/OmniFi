@@ -1,13 +1,16 @@
-# Security Audit Report: AR-004 Infrastructure, API & Key Custody
+# Security Assessment Report: AR-004 Infrastructure, API & Key Custody
 **Scope:** `services/quote-api`, `packages/rpc-resilience`, Browser Signing, Monitoring  
-**Evaluator:** Independent Protocol Security Review  
-**Date:** 2026-11-01  
+**Evaluator:** Internal Protocol Security Review Team (Pre-Audit Verification)  
+**Date:** 2026-11-03  
 **Status:** COMPLETE — REMEDIATIONS VERIFIED  
+
+> [!IMPORTANT]
+> **Independent Audit Notice:** This report represents internal whitebox testing, API contract validation, and infrastructure audits conducted by the internal OmniFi protocol team. It documents pre-audit remediation readiness and does NOT substitute the mandatory independent external third-party security audit required under Release Gate D prior to mainnet launch.
 
 ---
 
 ## 1. Executive Summary
-This audit evaluated the operational infrastructure, API interfaces, RPC failover mechanics, Prometheus metrics, and compliance with the Decoupled Key Management architecture (ADR-011).
+This assessment evaluated the operational infrastructure, API interfaces, RPC failover mechanics, Prometheus metrics, SSRF filtering (F-07), and compliance with the Decoupled Key Management architecture (ADR-011).
 
 ---
 

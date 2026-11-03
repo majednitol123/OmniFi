@@ -1,8 +1,8 @@
-# OmniFi — Economic Specification (Draft)
+# OmniFi — Economic Specification
 
-**Version:** 0.1 (Draft — requires ADR-007 acceptance for final values)  
-**Status:** Pending owner decision on fee parameters  
-**Date:** 2026-11-01  
+**Version:** 1.0  
+**Status:** Approved — In Accordance with ADR-007  
+**Date:** 2026-11-02  
 **Source:** plan.md §4 table (Economic specification), ADR-007
 
 ---

@@ -2,19 +2,21 @@
 set -euo pipefail
 
 # OmniFi Deployment Hash Verification Script
-# Verifies reproducible compilation artifacts against production manifests.
+# Performs genuine cryptographic SHA-256 verification of compiled EVM and Solana artifacts against production manifests.
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 MANIFEST_DIR="$ROOT_DIR/deployments/production"
+EVM_DIR="$ROOT_DIR/chains/evm"
+SOLANA_DIR="$ROOT_DIR/chains/solana"
 
 echo "=========================================================="
-echo "    OmniFi Production Deployment Hash Verification        "
+echo "    OmniFi Multi-Chain Cryptographic Hash Verification    "
 echo "=========================================================="
-echo "Workspace Root: $ROOT_DIR"
+echo "Workspace Root:     $ROOT_DIR"
 echo "Manifest Directory: $MANIFEST_DIR"
 echo ""
 
-# 1. Verify Manifest JSON Integrity
+# 1. Verify Manifest JSON Schema Integrity
 echo ">> Step 1: Validating Manifest Schema and JSON Integrity..."
 for manifest in "$MANIFEST_DIR"/*.json; do
     if [ -f "$manifest" ]; then
@@ -28,49 +30,100 @@ for manifest in "$MANIFEST_DIR"/*.json; do
 done
 echo ""
 
-# 2. Verify EVM Compilation Hashes
-echo ">> Step 2: Verifying EVM Contract Bytecode Consistency..."
-EVM_DIR="$ROOT_DIR/chains/evm"
-if [ -d "$EVM_DIR/src" ]; then
-    echo "   Computing SHA-256 tree hash for EVM contracts (src/)..."
-    EVM_SRC_HASH=$(find "$EVM_DIR/src" -type f -name "*.sol" -exec sha256sum {} + | sort -k 2 | sha256sum | awk '{print $1}')
-    echo "   EVM Source Tree Digest: $EVM_SRC_HASH"
-    
-    # Check if forge artifacts exist; if so, verify bytecode hashes
-    if [ -d "$EVM_DIR/out" ]; then
-        echo "   [PASS] Foundry build artifacts detected."
-    else
-        echo "   [INFO] Compiling EVM contracts with Foundry..."
-        (cd "$EVM_DIR" && forge build --skip test) > /dev/null 2>&1 || true
+# 2. Verify EVM Bytecode Hashes
+echo ">> Step 2: Verifying EVM Contract Bytecode Hashes..."
+if [ ! -d "$EVM_DIR/out" ]; then
+    echo "   Building EVM contracts with Foundry..."
+    (cd "$EVM_DIR" && forge build --skip test)
+fi
+
+verify_evm_manifest_hashes() {
+    local manifest_file="$1"
+    local net_name="$2"
+    echo "   Checking $net_name Contract Hashes..."
+
+    local contracts
+    contracts=$(jq -r '.contracts | keys[]' "$manifest_file")
+
+    for c in $contracts; do
+        local expected_hash
+        expected_hash=$(jq -r ".contracts[\"$c\"].runtimeBytecodeHashSha256" "$manifest_file")
+        
+        local rel_path=""
+        if [ "$c" = "OmniFiV2Factory" ]; then rel_path="OmniFiV2Factory.sol/OmniFiV2Factory.json"; fi
+        if [ "$c" = "OmniFiV2Router" ]; then rel_path="OmniFiV2Router.sol/OmniFiV2Router.json"; fi
+        if [ "$c" = "OmniFiCLMMFactory" ]; then rel_path="OmniFiPoolFactory.sol/OmniFiPoolFactory.json"; fi
+        if [ "$c" = "OmniFiSwapRouter" ]; then rel_path="OmniFiSwapRouter.sol/OmniFiSwapRouter.json"; fi
+        if [ "$c" = "OmniFiPoolManager" ]; then rel_path="OmniFiPoolManager.sol/OmniFiPoolManager.json"; fi
+
+        if [ -z "$rel_path" ]; then
+            echo "   [FAIL] Unknown contract $c in $manifest_file"
+            exit 1
+        fi
+
+        local artifact_path="$EVM_DIR/out/$rel_path"
+        if [ ! -f "$artifact_path" ]; then
+            echo "   [FAIL] Missing artifact for $c at $artifact_path"
+            exit 1
+        fi
+
+        local actual_hash
+        actual_hash=$(jq -r '.deployedBytecode.object' "$artifact_path" | shasum -a 256 | awk '{print $1}')
+
+        if [ "$actual_hash" != "$expected_hash" ]; then
+            echo "   [FAIL] Bytecode mismatch for $c in $net_name!"
+            echo "          Expected: $expected_hash"
+            echo "          Actual:   $actual_hash"
+            exit 1
+        else
+            echo "   [PASS] $c: $actual_hash"
+        fi
+    done
+}
+
+verify_evm_manifest_hashes "$MANIFEST_DIR/manifest-ethereum.json" "Ethereum"
+verify_evm_manifest_hashes "$MANIFEST_DIR/manifest-base.json" "Base"
+echo ""
+
+# 3. Verify Solana Anchor Program Binary Hashes
+echo ">> Step 3: Verifying Solana Anchor Program Binary Hashes..."
+SOL_MANIFEST="$MANIFEST_DIR/manifest-solana.json"
+programs=$(jq -r '.programs | keys[]' "$SOL_MANIFEST")
+
+for p in $programs; do
+    expected_bin_hash=$(jq -r ".programs[\"$p\"].binaryHashSha256" "$SOL_MANIFEST")
+    so_file="$SOLANA_DIR/target/deploy/${p}.so"
+
+    if [ ! -f "$so_file" ]; then
+        echo "   [FAIL] Missing compiled Solana program binary at $so_file"
+        exit 1
     fi
-    echo "   [PASS] EVM bytecode verification verified."
-fi
+
+    actual_bin_hash=$(shasum -a 256 "$so_file" | awk '{print $1}')
+    if [ "$actual_bin_hash" != "$expected_bin_hash" ]; then
+        echo "   [FAIL] Binary hash mismatch for Solana program $p!"
+        echo "          Expected: $expected_bin_hash"
+        echo "          Actual:   $actual_bin_hash"
+        exit 1
+    else
+        echo "   [PASS] $p: $actual_bin_hash"
+    fi
+done
 echo ""
 
-# 3. Verify Solana Anchor Program Hashes
-echo ">> Step 3: Verifying Solana Anchor Program Sources..."
-SOLANA_DIR="$ROOT_DIR/chains/solana"
-if [ -d "$SOLANA_DIR/programs" ]; then
-    echo "   Computing SHA-256 tree hash for Solana programs..."
-    SOL_SRC_HASH=$(find "$SOLANA_DIR/programs" -type f -name "*.rs" -exec sha256sum {} + | sort -k 2 | sha256sum | awk '{print $1}')
-    echo "   Solana Source Tree Digest: $SOL_SRC_HASH"
-    echo "   [PASS] Solana source tree verified."
-fi
-echo ""
-
-# 4. Cross-Verification Table
-echo ">> Step 4: Production Manifest Digest Verification Summary:"
+# 4. Summary Report
+echo ">> Step 4: Cryptographic Verification Summary:"
 cat <<EOF
 +----------------------------------------------------------------------------------------------------+
-| Manifest File               | Network / Target         | Status   | Governance Multi-Sig           |
+| Target Network        | Verified Manifest            | Stage / Environment     | Verification Mode |
 +----------------------------------------------------------------------------------------------------+
-| manifest-ethereum.json      | eip155:1 (Ethereum)      | VERIFIED | 0x5afe0000...0001 (2-of-4)     |
-| manifest-base.json          | eip155:8453 (Base)       | VERIFIED | 0x5afe0000...8453 (2-of-4)     |
-| manifest-solana.json        | solana:mainnet-beta      | VERIFIED | SqdGov4444...4444 (2-of-4)     |
-| feature-flags.json          | Production Dynamic Caps  | VERIFIED | Enforced in Quote Engine & API |
+| Ethereum Mainnet (1)  | manifest-ethereum.json       | pre-production-testnet  | SHA-256 Bytecode  |
+| Base Mainnet (8453)   | manifest-base.json           | pre-production-testnet  | SHA-256 Bytecode  |
+| Solana Mainnet-Beta   | manifest-solana.json         | pre-production-testnet  | SHA-256 Binary    |
+| Multi-Chain Config    | feature-flags.json           | pre-production-testnet  | Schema & Rules    |
 +----------------------------------------------------------------------------------------------------+
 EOF
 
 echo ""
-echo ">> All production deployment manifests and cryptographic hashes verified successfully!"
+echo ">> All cryptographic hashes match compiled artifacts exactly with zero errors!"
 exit 0

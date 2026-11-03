@@ -8,18 +8,20 @@
     "build": "tsc",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src --ext .ts",
-    "test": "vitest run"
+    "test": "vitest run",
+    "seed": "tsc && node dist/seed.js"
   },
   "dependencies": {
     "@omnifi/config": "workspace:*",
-    "@omnifi/domain": "workspace:*"
+    "@omnifi/domain": "workspace:*",
+    "pg": "^8.23.1"
   },
   "devDependencies": {
     "@omnifi/eslint-config": "workspace:*",
     "@omnifi/prettier-config": "workspace:*",
     "@types/node": "^20.11.0",
+    "@types/pg": "^8.23.1",
     "typescript": "^5.7.3",
     "vitest": "^2.1.8"
   }
 }
-

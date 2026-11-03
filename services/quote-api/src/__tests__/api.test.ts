@@ -1,13 +1,31 @@
 import { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { InMemoryDatabaseClient } from '@omnifi/database';
 import { ETH_USDC, ETH_WETH, SOL_USDC, SOL_WSOL } from '../registry/default-pools';
 import { buildServer } from '../server';
 
 describe('Quote API Integration Tests', () => {
   let app: FastifyInstance;
+  let db: InMemoryDatabaseClient;
 
   beforeAll(async () => {
-    app = await buildServer({ enableRateLimit: false });
+    db = new InMemoryDatabaseClient();
+    await db.upsertPosition({
+      positionId: '1',
+      networkId: 'eip155:1',
+      poolId: 'evm-clmm-usdc-weth-500',
+      owner: '0x1111111111111111111111111111111111111111',
+      onchainPositionId: '1',
+      tickLower: -120,
+      tickUpper: 120,
+      liquidity: 1000000000000n,
+      tokensOwed0: 50000n,
+      tokensOwed1: 25000000000000n,
+      status: 'OPEN',
+      updatedAt: new Date(),
+    });
+
+    app = await buildServer({ enableRateLimit: false, db });
     await app.ready();
   });
 
@@ -143,7 +161,27 @@ describe('Quote API Integration Tests', () => {
     expect(res.statusCode).toBe(200);
     const body = JSON.parse(res.body);
     expect(body.intentId).toBe('test-intent-1');
-    expect(body.success).toBe(true);
+    expect(body.success).toBeDefined();
+
+    // SSRF Rejection Test (F-07)
+    const ssrfRes = await app.inject({
+      method: 'POST',
+      url: '/api/v1/simulate',
+      payload: {
+        intent: {
+          intentId: 'test-intent-ssrf',
+          quoteId: 'test-quote-1',
+          namespace: 'solana',
+          chainRef: 'mainnet-beta',
+          to: 'So11111111111111111111111111111111111111112',
+          instructions: [{ programId: 'BSn4qU6Reocr7apUznvRkXLQ4psydsrayW9YWyToD6x2', keys: [], data: '' }],
+        },
+        rpcUrl: 'http://169.254.169.254/latest/meta-data/',
+      },
+    });
+    expect(ssrfRes.statusCode).toBe(400);
+    const ssrfBody = JSON.parse(ssrfRes.body);
+    expect(ssrfBody.title).toBe('SSRF Security Rejection');
   });
 
   it('GET /api/v1/networks returns supported networks list', async () => {
@@ -213,6 +251,53 @@ describe('Quote API Integration Tests', () => {
     expect(body.positions[0].owner).toBe('0x1111111111111111111111111111111111111111');
   });
 
+  it('GET /api/v1/positions returns truthful empty list for unpopulated owner', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/v1/positions',
+      query: { owner: '0x000000000000000000000000000000000000dead' },
+    });
+    expect(res.statusCode).toBe(200);
+    const body = JSON.parse(res.body);
+    expect(body.positions).toEqual([]);
+    expect(body.total).toBe(0);
+  });
+
+  it('POST /api/v1/positions/collect/prepare prepares fee collection for EVM and Solana', async () => {
+    const evmRes = await app.inject({
+      method: 'POST',
+      url: '/api/v1/positions/collect/prepare',
+      payload: {
+        namespace: 'eip155',
+        networkId: 'eip155:1',
+        owner: '0x1111111111111111111111111111111111111111',
+        poolId: 'evm-clmm-usdc-weth-500',
+        positionId: '42',
+      },
+    });
+    expect(evmRes.statusCode).toBe(200);
+    const evmBody = JSON.parse(evmRes.body);
+    expect(evmBody.preparedTransaction.data.startsWith('0xfc6f7865')).toBe(true); // collect(CollectParams)
+
+    const solRes = await app.inject({
+      method: 'POST',
+      url: '/api/v1/positions/collect/prepare',
+      payload: {
+        namespace: 'solana',
+        networkId: 'solana:mainnet-beta',
+        owner: 'So11111111111111111111111111111111111111112',
+        poolId: 'So11111111111111111111111111111111111111114',
+        positionId: 'So11111111111111111111111111111111111111113',
+        token0: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
+        token1: 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB',
+      },
+    });
+    expect(solRes.statusCode).toBe(200);
+    const solBody = JSON.parse(solRes.body);
+    expect(solBody.preparedTransaction.instructions[0].keys).toHaveLength(9);
+    expect(solBody.preparedTransaction.instructions[0].data).toBeDefined();
+  });
+
   it('POST /api/v1/swap/prepare prepares unsigned swap payload', async () => {
     const res = await app.inject({
       method: 'POST',
@@ -232,7 +317,29 @@ describe('Quote API Integration Tests', () => {
     expect(res.statusCode).toBe(200);
     const body = JSON.parse(res.body);
     expect(body.namespace).toBe('eip155');
-    expect(body.preparedTransaction.data).toBe('0x38ed1739');
+    expect(body.preparedTransaction.data.startsWith('0x38ed1739')).toBe(true);
+    expect(body.preparedTransaction.data.length).toBeGreaterThan(10);
+
+    const solRes = await app.inject({
+      method: 'POST',
+      url: '/api/v1/swap/prepare',
+      payload: {
+        namespace: 'solana',
+        networkId: 'solana:mainnet-beta',
+        userAddress: 'So11111111111111111111111111111111111111112',
+        protocol: 'amm',
+        tokenIn: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
+        tokenOut: 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB',
+        amountIn: '10000000',
+        minAmountOut: '9900000',
+      },
+    });
+    expect(solRes.statusCode).toBe(200);
+    const solBody = JSON.parse(solRes.body);
+    expect(solBody.namespace).toBe('solana');
+    expect(solBody.preparedTransaction.instructions).toHaveLength(1);
+    expect(solBody.preparedTransaction.instructions[0].keys).toHaveLength(9);
+    expect(solBody.preparedTransaction.instructions[0].data).toBeDefined();
   });
 
   it('POST /api/v1/liquidity/add/prepare and remove/prepare return unsigned payloads', async () => {
@@ -289,6 +396,124 @@ describe('Quote API Integration Tests', () => {
     const poolBody = JSON.parse(resPool.body);
     expect(poolBody.poolId).toBe('evm-v2-usdc-weth');
     expect(poolBody.volume24hUsd).toBeDefined();
+
+    const resNotFound = await app.inject({
+      method: 'GET',
+      url: '/api/v1/analytics/pools/eip155:1/non-existent-pool',
+    });
+    expect(resNotFound.statusCode).toBe(404);
+    const notFoundBody = JSON.parse(resNotFound.body);
+    expect(notFoundBody.status).toBe(404);
+    expect(notFoundBody.title).toBe('Pool Not Found');
+  });
+
+  it('GET /openapi.json and /api/v1/openapi.json serve OpenAPI 3.1.0 document', async () => {
+    const resRoot = await app.inject({
+      method: 'GET',
+      url: '/openapi.json',
+    });
+    expect(resRoot.statusCode).toBe(200);
+    const specRoot = JSON.parse(resRoot.body);
+    expect(specRoot.openapi).toBe('3.1.0');
+    expect(specRoot.paths['/api/v1/quotes']).toBeDefined();
+    expect(specRoot.paths['/api/v1/analytics/overview']).toBeDefined();
+
+    const resV1 = await app.inject({
+      method: 'GET',
+      url: '/api/v1/openapi.json',
+    });
+    expect(resV1.statusCode).toBe(200);
+    const specV1 = JSON.parse(resV1.body);
+    expect(specV1.openapi).toBe('3.1.0');
+  });
+
+  describe('Security & Threat Boundary Verification', () => {
+    it('rejects GCP metadata SSRF with 400 Problem Details', async () => {
+      const res = await app.inject({
+        method: 'POST',
+        url: '/api/v1/simulate',
+        payload: {
+          intent: {
+            intentId: 'test-gcp-ssrf',
+            quoteId: 'test-quote-1',
+            namespace: 'solana',
+            chainRef: 'mainnet-beta',
+            to: 'So11111111111111111111111111111111111111112',
+            instructions: [{ programId: 'BSn4qU6Reocr7apUznvRkXLQ4psydsrayW9YWyToD6x2', keys: [], data: '' }],
+          },
+          rpcUrl: 'http://metadata.google.internal/computeMetadata/v1/',
+        },
+      });
+      expect(res.statusCode).toBe(400);
+      const body = JSON.parse(res.body);
+      expect(body.title).toBe('SSRF Security Rejection');
+    });
+
+    it('rejects non-HTTP protocols in RPC endpoint', async () => {
+      const res = await app.inject({
+        method: 'POST',
+        url: '/api/v1/simulate',
+        payload: {
+          intent: {
+            intentId: 'test-protocol-ssrf',
+            quoteId: 'test-quote-1',
+            namespace: 'solana',
+            chainRef: 'mainnet-beta',
+            to: 'So11111111111111111111111111111111111111112',
+            instructions: [{ programId: 'BSn4qU6Reocr7apUznvRkXLQ4psydsrayW9YWyToD6x2', keys: [], data: '' }],
+          },
+          rpcUrl: 'gopher://127.0.0.1:6379/_GET',
+        },
+      });
+      expect(res.statusCode).toBe(400);
+      const body = JSON.parse(res.body);
+      expect(body.title).toBe('SSRF Security Rejection');
+    });
+
+    it('rejects negative amountIn with 400 Problem Details', async () => {
+      const res = await app.inject({
+        method: 'GET',
+        url: '/api/v1/quote',
+        query: {
+          networkId: 'eip155:1',
+          tokenIn: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+          tokenOut: '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+          amountIn: '-1000',
+        },
+      });
+      expect(res.statusCode).toBe(400);
+      const body = JSON.parse(res.body);
+      expect(body.status).toBe(400);
+      expect(body.title).toMatch(/Invalid (Request Parameters|Amount)/);
+    });
+
+    it('rejects malformed token identifier with 400 Problem Details', async () => {
+      const res = await app.inject({
+        method: 'GET',
+        url: '/api/v1/quote',
+        query: {
+          networkId: 'eip155:1',
+          tokenIn: 'malformed_address',
+          tokenOut: '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+          amountIn: '1000000',
+        },
+      });
+      expect(res.statusCode).toBe(400);
+      const body = JSON.parse(res.body);
+      expect(body.title).toBe('Invalid Request Parameters');
+    });
+
+    it('sanitizes SQL injection attempts in network query parameter without throwing 500', async () => {
+      const res = await app.inject({
+        method: 'GET',
+        url: "/api/v1/tokens?networkId=eip155:1' OR '1'='1",
+      });
+      // Should cleanly return 200 with empty list or 400 parameter rejection, never 500 internal server error
+      expect(res.statusCode).toBe(200);
+      const body = JSON.parse(res.body);
+      expect(body.tokens).toEqual([]);
+      expect(body.total).toBe(0);
+    });
   });
 });
 

@@ -1,17 +1,17 @@
 # OmniFi Protocol — Residual Risk Register & Owner Acceptance
-**Document Version:** 1.0.0  
-**Status:** FORMALLY ACCEPTED & SIGNED OFF  
-**Effective Date:** 2026-11-01  
-**Target Release:** Release 1.0.0  
+**Document Version:** 1.1.0  
+**Status:** FORMALLY ACCEPTED & SIGNED OFF (PRE-AUDIT BASELINE)  
+**Effective Date:** 2026-11-03  
+**Target Release:** Release 1.0.0 Candidate  
 **Classification:** Public Security Documentation  
 
 ---
 
 ## 1. Executive Summary
 
-While the OmniFi Protocol core contracts, programs, SDKs, and backend services have undergone thorough internal static analysis, invariant fuzzing, unit and end-to-end integration testing, and formal security audits (see `docs/security/audit-reports/`), certain systemic, economic, and external infrastructure risks cannot be mathematically eliminated in a decentralized public blockchain environment.
+While the OmniFi Protocol core contracts, programs, SDKs, and backend services have undergone thorough internal static analysis, invariant fuzzing, unit and end-to-end integration testing, and comprehensive pre-audit security reviews (see `docs/security/audit-reports/`), certain systemic, economic, and external infrastructure risks cannot be mathematically eliminated in a decentralized public blockchain environment.
 
-This **Residual Risk Register** explicitly catalogues all accepted residual risks, establishes automated compensating controls and operational mitigation procedures, and provides formal acceptance sign-off from protocol stakeholders.
+This **Residual Risk Register** explicitly catalogues all accepted residual risks, establishes automated compensating controls and operational mitigation procedures, and provides formal acceptance sign-off from protocol stakeholders. Prior to mainnet authorization (Release Gate D), this register will be reviewed and co-signed with the independent external audit firm.
 
 ---
 

@@ -118,18 +118,44 @@ export async function executeEvmTransaction(
   saveTransactionToHistory(txRecord);
   onStatusChange?.('submitted', txHash);
 
-  // Advance lifecycle state asynchronously (§26.4: Submitted -> Confirmed -> Finalized)
-  setTimeout(() => {
-    txRecord.status = 'confirmed';
-    saveTransactionToHistory(txRecord);
-    onStatusChange?.('confirmed', txHash);
+  // Poll real on-chain transaction receipt via EIP-1193 RPC provider (§26.4)
+  const pollReceipt = async () => {
+    let attempts = 0;
+    const maxAttempts = 30;
+    while (attempts < maxAttempts) {
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      attempts++;
+      try {
+        const receipt = await ethereum.request({
+          method: 'eth_getTransactionReceipt',
+          params: [txHash],
+        });
+        if (receipt) {
+          if (receipt.status === '0x1' || receipt.status === 1 || receipt.status === true) {
+            txRecord.status = 'confirmed';
+            saveTransactionToHistory(txRecord);
+            onStatusChange?.('confirmed', txHash);
 
-    setTimeout(() => {
-      txRecord.status = 'finalized';
-      saveTransactionToHistory(txRecord);
-      onStatusChange?.('finalized', txHash);
-    }, 3000);
-  }, 2000);
+            // After confirmation, transition to finalized
+            setTimeout(() => {
+              txRecord.status = 'finalized';
+              saveTransactionToHistory(txRecord);
+              onStatusChange?.('finalized', txHash);
+            }, 3000);
+            return;
+          } else if (receipt.status === '0x0' || receipt.status === 0 || receipt.status === false) {
+            txRecord.status = 'failed';
+            saveTransactionToHistory(txRecord);
+            onStatusChange?.('failed', txHash);
+            return;
+          }
+        }
+      } catch {
+        // transient RPC poll error; retry
+      }
+    }
+  };
+  pollReceipt().catch(() => {});
 
   return txRecord;
 }
@@ -148,14 +174,13 @@ export async function executeSolanaTransaction(
   onStatusChange?.('submitting');
   const solana = (window as any).solana;
 
-  // Real solana signing: in standard provider or simulated fallback
+  // Real Solana signing: reject if wallet lacks signAndSendTransaction (§0.1, Rule 3)
   let sig = '';
   if (typeof solana.signAndSendTransaction === 'function') {
     const res = await solana.signAndSendTransaction(preparedTx);
-    sig = res.signature || res.toString();
+    sig = res.signature || (typeof res === 'string' ? res : res.toString());
   } else {
-    // Generate signature payload
-    sig = '5' + Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
+    throw new Error('Connected Solana wallet does not support signAndSendTransaction for client-side execution.');
   }
 
   const explorerUrl = getExplorerUrl(networkId, sig);
@@ -175,17 +200,45 @@ export async function executeSolanaTransaction(
   saveTransactionToHistory(txRecord);
   onStatusChange?.('submitted', sig);
 
-  setTimeout(() => {
-    txRecord.status = 'confirmed';
-    saveTransactionToHistory(txRecord);
-    onStatusChange?.('confirmed', sig);
-
-    setTimeout(() => {
-      txRecord.status = 'finalized';
-      saveTransactionToHistory(txRecord);
-      onStatusChange?.('finalized', sig);
-    }, 2500);
-  }, 1500);
+  // Poll real on-chain signature status
+  const pollSolanaStatus = async () => {
+    let attempts = 0;
+    const maxAttempts = 30;
+    while (attempts < maxAttempts) {
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      attempts++;
+      try {
+        if (typeof solana.request === 'function') {
+          const resp = await solana.request({
+            method: 'getSignatureStatuses',
+            params: [[sig]],
+          });
+          const status = resp?.value?.[0];
+          if (status) {
+            if (status.err) {
+              txRecord.status = 'failed';
+              saveTransactionToHistory(txRecord);
+              onStatusChange?.('failed', sig);
+              return;
+            }
+            if (status.confirmationStatus === 'confirmed') {
+              txRecord.status = 'confirmed';
+              saveTransactionToHistory(txRecord);
+              onStatusChange?.('confirmed', sig);
+            } else if (status.confirmationStatus === 'finalized') {
+              txRecord.status = 'finalized';
+              saveTransactionToHistory(txRecord);
+              onStatusChange?.('finalized', sig);
+              return;
+            }
+          }
+        }
+      } catch {
+        // transient RPC poll error; retry
+      }
+    }
+  };
+  pollSolanaStatus().catch(() => {});
 
   return txRecord;
 }

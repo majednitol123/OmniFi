@@ -196,7 +196,43 @@ mod tests {
 
     #[test]
     fn test_price_bounds_verification() {
-        assert!(MIN_SQRT_PRICE > 0);
-        assert!(MAX_SQRT_PRICE > MIN_SQRT_PRICE);
+        let min_price = crate::math::tick_math::get_sqrt_price_at_tick(crate::constants::MIN_TICK).unwrap();
+        let max_price = crate::math::tick_math::get_sqrt_price_at_tick(crate::constants::MAX_TICK).unwrap();
+        assert!(min_price >= MIN_SQRT_PRICE);
+        assert!(max_price <= MAX_SQRT_PRICE);
+    }
+
+    #[test]
+    fn test_clmm_fee_growth_global_monotonicity() {
+        use crate::math::full_math::mul_div_down;
+
+        let fee_amount = 3000u64;
+        let liquidity = 50_000_000_000u128;
+
+        let delta_growth = mul_div_down(fee_amount as u128, 1u128 << 64, liquidity).unwrap();
+        assert!(delta_growth > 0, "Fee growth delta must be strictly positive");
+
+        let initial_fee_growth = 1_000_000u128;
+        let updated_fee_growth = initial_fee_growth.wrapping_add(delta_growth);
+        assert!(updated_fee_growth > initial_fee_growth, "Fee growth must be monotonically non-decreasing");
+    }
+
+    #[test]
+    fn test_clmm_sqrt_price_next_direction() {
+        let current_p = get_sqrt_price_at_tick(0).unwrap();
+        let target_lower = get_sqrt_price_at_tick(-50).unwrap();
+        let target_upper = get_sqrt_price_at_tick(50).unwrap();
+        let liquidity = 10_000_000_000u128;
+        let amount_in = 100_000u64;
+
+        // zero_for_one: price drops
+        let step_down = compute_swap_step(current_p, target_lower, liquidity, amount_in, 3000, true, true).unwrap();
+        assert!(step_down.sqrt_price_next_x64 < current_p);
+        assert!(step_down.sqrt_price_next_x64 >= target_lower);
+
+        // one_for_zero: price rises
+        let step_up = compute_swap_step(current_p, target_upper, liquidity, amount_in, 3000, true, false).unwrap();
+        assert!(step_up.sqrt_price_next_x64 > current_p);
+        assert!(step_up.sqrt_price_next_x64 <= target_upper);
     }
 }

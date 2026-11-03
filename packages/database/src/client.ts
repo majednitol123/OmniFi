@@ -27,6 +27,17 @@ export interface OmniFiDatabaseClient {
   insertPool(pool: DbPool): Promise<void>;
   getPool(poolId: string): Promise<DbPool | undefined>;
   listPools(networkId?: string): Promise<DbPool[]>;
+  updatePoolState(
+    poolId: string,
+    state: {
+      reserve0?: bigint;
+      reserve1?: bigint;
+      sqrtPriceX64?: bigint;
+      currentTick?: number;
+      liquidity?: bigint;
+      protocolFeeFraction?: number;
+    },
+  ): Promise<void>;
 
   // Swaps (with unique composite constraint (networkId, txHash, eventIndex))
   insertSwap(swap: DbSwap): Promise<void>;

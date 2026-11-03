@@ -7,6 +7,12 @@ library TransferHelper {
     error SafeTransferFailed();
     error SafeTransferFromFailed();
     error SafeApproveFailed();
+    error SafeTransferETHFailed();
+
+    function safeTransferETH(address to, uint256 value) internal {
+        (bool success,) = to.call{value: value}("");
+        if (!success) revert SafeTransferETHFailed();
+    }
 
     function safeTransfer(address token, address to, uint256 value) internal {
         // bytes4(keccak256("transfer(address,uint256)")) == 0xa9059cbb

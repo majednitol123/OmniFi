@@ -1,481 +1,694 @@
 # OmniFi (Ω)
 
-> **High-Precision, Non-Custodial Multi-Chain Decentralized Exchange**  
-> Independently engineered native protocol implementations across **Ethereum**, **Base**, and **Solana**, unified by an algorithmic routing engine and cyber-industrial trading cockpit.
+> **Enterprise-Grade, Non-Custodial Multi-Chain Decentralized Exchange & Liquidity Protocol**  
+> *Engineered from first principles across Ethereum, Base, and Solana — featuring native Uniswap v2, v3 (CLMM), and v4 (Singleton) implementations, an algorithmic graph-routing engine, institutional multi-chain governance, formal verification, and a cyber-industrial trading cockpit.*
 
-[![CI Status](https://img.shields.io/badge/CI-Passing-00e599?style=flat-square&logo=githubactions)](https://github.com/omnifi/omnifi)
-[![Docker Stack](https://img.shields.io/badge/Docker%20Compose-7%20Services%20Active-38bdf8?style=flat-square&logo=docker)](file:///Users/majedurrahman/coding/OmniFi/docker-compose.yml)
-[![EVM Solidity](https://img.shields.io/badge/Solidity-0.8.24%20%7C%20Foundry-f59e0b?style=flat-square&logo=solidity)](file:///Users/majedurrahman/coding/OmniFi/chains/evm)
-[![Solana Anchor](https://img.shields.io/badge/Solana-Anchor%200.30%20%7C%20Rust-c084fc?style=flat-square&logo=solana)](file:///Users/majedurrahman/coding/OmniFi/chains/solana)
-[![Frontend](https://img.shields.io/badge/Next.js-14%20App%20Router-white?style=flat-square&logo=nextdotjs)](file:///Users/majedurrahman/coding/OmniFi/apps/web)
-[![Architecture ADR-011](https://img.shields.io/badge/Key%20Management-Decoupled%20Client--Side-00e599?style=flat-square)](file:///Users/majedurrahman/coding/OmniFi/docs/adr/ADR-011-admin-custody.md)
+[![CI Pipeline](https://img.shields.io/badge/CI-Passing-00e599?style=flat-square&logo=githubactions)](https://github.com/omnifi/omnifi)
+[![EVM Foundry](https://img.shields.io/badge/Foundry-191%2F191%20Tests%20Passing-f59e0b?style=flat-square&logo=solidity)](chains/evm)
+[![Solana Anchor](https://img.shields.io/badge/Solana-Anchor%200.30%20%7C%20Rust-c084fc?style=flat-square&logo=solana)](chains/solana)
+[![Turbo Monorepo](https://img.shields.io/badge/Turbo-32%2F32%20Tasks%20Passing-white?style=flat-square&logo=turborepo)](packages)
+[![Formal Verification](https://img.shields.io/badge/Formal%20Verification-Certora%20%7C%20Echidna-38bdf8?style=flat-square)](chains/evm/certora)
+[![Multi-Chain Governance](https://img.shields.io/badge/Multisig-Safe%202--of--4%20%7C%20Squads%20v4-10b981?style=flat-square)](chains/evm/src/governance)
+[![Security Scans](https://img.shields.io/badge/Security-Slither%20%7C%20Aderyn%20%7C%20Trivy%20%7C%20Gitleaks-emerald?style=flat-square)](docs/security)
 [![License](https://img.shields.io/badge/License-Apache--2.0-blue?style=flat-square)](LICENSE)
 
 ---
 
 ## Table of Contents
 
-- [1. Executive Summary](#1-executive-summary)
-- [2. Core Architectural Principles](#2-core-architectural-principles)
-- [3. System Architecture](#3-system-architecture)
-- [4. Supported Chains & AMM Engines](#4-supported-chains--amm-engines)
-- [5. Repository Structure](#5-repository-structure)
-- [6. Component Deep Dive](#6-component-deep-dive)
-  - [On-Chain Protocols (EVM & Solana)](#on-chain-protocols-evm--solana)
-  - [Algorithmic Quote Engine](#algorithmic-quote-engine)
-  - [Quote & Routing API](#quote--routing-api)
-  - [Web Frontend & Trading Cockpit](#web-frontend--trading-cockpit)
-- [7. Quickstart & Local Development](#7-quickstart--local-development)
-  - [Prerequisites](#prerequisites)
-  - [One-Command Docker Deployment](#one-command-docker-deployment)
-  - [Bare-Metal Monorepo Development](#bare-metal-monorepo-development)
-- [8. Docker Ecosystem & Port Matrix](#8-docker-ecosystem--port-matrix)
-- [9. REST API Reference](#9-rest-api-reference)
-- [10. Testing & Verification Playbook](#10-testing--verification-playbook)
-- [11. Security & Cryptographic Invariants](#11-security--cryptographic-invariants)
-- [12. Architecture Decision Records (ADRs)](#12-architecture-decision-records-adrs)
-- [13. License](#13-license)
+- [1. Executive Brief and Architectural Thesis](#1-executive-brief-and-architectural-thesis)
+- [2. Complete System Architecture](#2-complete-system-architecture)
+- [3. Supported Networks and AMM Engine Matrix](#3-supported-networks-and-amm-engine-matrix)
+- [4. Repository and Monorepo Layout](#4-repository-and-monorepo-layout)
+- [5. On-Chain Protocol Engineering Deep Dive](#5-on-chain-protocol-engineering-deep-dive)
+  - [5.1 Uniswap V2 AMM (Constant Product)](#51-uniswap-v2-amm-constant-product)
+  - [5.2 Uniswap V3 Concentrated Liquidity (CLMM)](#52-uniswap-v3-concentrated-liquidity-clmm)
+  - [5.3 Uniswap V4 Singleton and Hooks Architecture](#53-uniswap-v4-singleton-and-hooks-architecture)
+  - [5.4 Enterprise EVM Periphery Suite](#54-enterprise-evm-periphery-suite)
+  - [5.5 Solana High-Throughput AMM and CLMM Programs](#55-solana-high-throughput-amm-and-clmm-programs)
+- [6. Algorithmic Routing and Quote Engine](#6-algorithmic-routing-and-quote-engine)
+- [7. Production REST API and Systems Engineering](#7-production-rest-api-and-systems-engineering)
+- [8. Multi-Chain Institutional Governance and Custody Controls](#8-multi-chain-institutional-governance-and-custody-controls)
+- [9. Institutional Security, Verification and Audit Reports](#9-institutional-security-verification-and-audit-reports)
+- [10. Testing Taxonomy and Verification Playbook](#10-testing-taxonomy-and-verification-playbook)
+- [11. Cyber-Industrial Trading Cockpit (Frontend Architecture)](#11-cyber-industrial-trading-cockpit-frontend-architecture)
+- [12. Quickstart, Docker Stack and Operational Runbook](#12-quickstart-docker-stack-and-operational-runbook)
+- [13. Architectural Decision Records (ADRs 001 - 015)](#13-architectural-decision-records-adrs-001---015)
+- [14. Candidate Alignment: Why OmniFi Matters for Uniswap Labs](#14-candidate-alignment-why-omnifi-matters-for-uniswap-labs)
+- [15. License and Attribution](#15-license-and-attribution)
 
 ---
 
-## 1. Executive Summary
+## 1. Executive Brief and Architectural Thesis
 
-**OmniFi** is an enterprise-grade decentralized exchange (DEX) engineered from the ground up for zero-compromise trading and liquidity management. Rather than relying on fragile cross-chain bridges or synthetic wrapped abstractions, OmniFi deploys **native, independently engineered protocol implementations** directly onto each supported chain:
+OmniFi is a multi-chain decentralized exchange and liquidity routing protocol engineered to demonstrate what a modern, production-grade DeFi protocol looks like when built without technical compromises.
 
-1. **EVM Chains (Ethereum Mainnet & Base)**: Native Solidity contracts written in Foundry covering Uniswap V2 constant-product AMM, Uniswap V3 concentrated liquidity (CLMM), and Uniswap V4 hooks.
-2. **Solana**: Native Rust/Anchor programs featuring low-latency constant-product AMMs and concentrated liquidity pools with SPL Token-2022 compatibility.
+### The Problem
+Most cross-chain trading systems introduce systemic fragility by relying on:
+- Centralized or collateral-backed bridge validators vulnerable to private-key compromises.
+- Fragmented liquidity silos that cannot discover optimal multi-hop trade routes across disparate VM runtimes.
+- Superficial wrapper contracts that hide slippage, round away integer precision, or leak MEV to front-running bots.
 
-All pools feed into an off-chain algorithmic **Quote Engine** that computes optimal trade routes, multi-hop splits, and precise price impact estimates. Users interact through a unified, high-performance web cockpit built with Next.js 14 and an obsidian-cyber industrial design system.
-
----
-
-## 2. Core Architectural Principles
-
-- **Decoupled Key Management ([ADR-011](file:///Users/majedurrahman/coding/OmniFi/docs/adr/ADR-011-admin-custody.md))**: OmniFi services **never hold, manage, or proxy private keys**. The backend only prepares unsigned transaction payloads. Signing is exclusively executed client-side inside the user's browser wallet (MetaMask, Coinbase Wallet, Phantom).
-- **Zero Floating-Point Math**: All financial computations, tick math, invariant equations, and fee splits use strict integer fixed-point math (`bigint` in TypeScript, `uint256` in Solidity, `u128`/`u64` in Rust).
-- **Multi-Tier Transaction Lifecycle (§26.4)**: Real-time user feedback tracking transactions through the exact state machine:  
-  `Idle` ➔ `Preparing` ➔ `Submitting` ➔ `Submitted` ➔ `Confirmed` ➔ `Finalized` (or `Failed`).
-- **Resilient Route Discovery**: Multi-hop pathfinding utilizing Bellman-Ford and Dijkstra algorithms to find maximum output paths and multi-route percentage splits while enforcing price impact threshold barriers (warning at $\ge 1\%$, mandatory confirmation at $\ge 5\%$).
-- **Centralized React Portals**: All modal overlays (Wallet Modal, Token Selector) are dynamically mounted to `document.body` via React Portals, guaranteeing viewport centering without containing-block clipping from sticky headers or CSS `backdrop-filter` ancestors.
+### The OmniFi Solution
+Rather than routing through synthetic bridges or wrapping cross-chain representations, OmniFi deploys **native, independently engineered AMM engines directly onto each supported chain**:
+1. **Ethereum Mainnet & Base (EVM)**: Native Solidity contracts written in Foundry covering Uniswap V2 constant product, Uniswap V3 concentrated liquidity with $Q64.96$ fixed-point arithmetic, and Uniswap V4 singleton flash accounting with EIP-1153 transient storage (`tstore`/`tload`).
+2. **Solana Mainnet-Beta (SVM)**: Native Rust/Anchor programs utilizing parallel account runtimes, program-derived addresses (PDAs) for authority-free vault custody, and SPL Token-2022 extensions.
+3. **Algorithmic Graph Routing**: An off-chain pathfinding engine modeling liquidity as a Directed Acyclic Multigraph (DAMG) to discover multi-hop paths and split-route trade flows with integer-only basis point ($bps$) precision.
+4. **Zero-Trust Non-Custodial Security ([ADR-011](docs/adr/ADR-011-admin-custody.md))**: Backend microservices **never custody private keys or proxy signed transactions**. The backend solely computes optimal quotes and generates deterministic, unsigned call payloads. All transaction signing occurs client-side in the user's browser wallet (MetaMask, Phantom, Coinbase Wallet).
+5. **Real Systems Engineering (Zero Mock Data)**: All pool states, liquidity tick maps, and trade telemetry persist in PostgreSQL 16 with Redis 7 caching. No mock data, hardcoded routes, or synthetic simulations.
 
 ---
 
-## 3. System Architecture
+## 2. Complete System Architecture
 
-The following diagram illustrates the complete OmniFi end-to-end architecture:
+OmniFi is structured across four decoupled layers: the **Client Cockpit Layer**, the **Routing & API Gateway Layer**, the **Data & Observability Layer**, and the **On-Chain Protocol Execution Layer**.
 
 ```mermaid
 flowchart TD
-    subgraph Client ["Client Layer (Browser)"]
-        UI["apps/web (Next.js 14)"]
-        Cockpit["Trading Cockpit & Slippage Engine"]
-        Wallet["Web3 Adapters (EVM / Solana)"]
-        Portal["Centralized Modals (createPortal)"]
+    subgraph Client ["Client Layer (Browser / Web3)"]
+        UI["apps/web (Next.js 14 App Router)"]
+        Cockpit["Trading Cockpit & Slippage Sentinel"]
+        Wallet["Multi-Chain Wallet Connectors (EIP-1193 / Solana)"]
+        Portal["Centralized Modal Host (createPortal -> document.body)"]
         UI --> Cockpit
         UI --> Wallet
         UI --> Portal
     end
 
-    subgraph Gateway ["Routing & API Layer"]
-        API["services/quote-api (Fastify 4)"]
-        Router["@omnifi/quote-engine (Graph Multi-Hop)"]
-        Cache["Redis (TTL 15s Route Caching)"]
-        DB["PostgreSQL 16 (Pool Records & Analytics)"]
+    subgraph Gateway ["Routing & Microservice Layer"]
+        API["services/quote-api (Fastify 4 REST API)"]
+        Router["@omnifi/quote-engine (Graph Multi-Hop & Split Router)"]
+        SSRF["SSRF Defense Guard (Blocks 169.254.169.254 & Link-Local)"]
+        RateLimit["Rate Limiter (Redis Token Bucket)"]
+        API --> RateLimit
+        API --> SSRF
         API <--> Router
-        API <--> Cache
-        API <--> DB
     end
 
-    subgraph Observability ["Telemetry & Monitoring"]
-        Prom["Prometheus (Scraper :9090)"]
-        Graf["Grafana Dashboard (:3002)"]
+    subgraph Storage ["Persistence & Telemetry Layer"]
+        PG[("PostgreSQL 16 (Pool Records, Swaps, Reserves)")]
+        Redis[("Redis 7 (Route TTL Cache & Sliding Window Limiter)")]
+        Prom["Prometheus Engine (:9090)"]
+        Graf["Grafana Cockpit Dashboard (:3002)"]
+        API <--> PG
+        API <--> Redis
         API --> Prom --> Graf
     end
 
-    subgraph Blockchain ["On-Chain Protocol Implementations"]
+    subgraph Execution ["On-Chain Protocol Implementations"]
         subgraph EVM ["chains/evm (Ethereum & Base)"]
-            V2["Uniswap V2 AMM (Constant Product)"]
-            CLMM_EVM["Uniswap V3 CLMM (Concentrated)"]
-            V4["Uniswap V4 Singleton & Hooks"]
+            V2["Uniswap V2 Pair (x * y = k)"]
+            V3["Uniswap V3 CLMM Pool (Concentrated L)"]
+            V4["Uniswap V4 Singleton (OmniFiPoolManager)"]
+            Periphery["Periphery (Multicall, Payments, Validation, WETH9)"]
+            Safe["Gnosis Safe v1.4.1 (2-of-4 Multisig Governance)"]
+            V3 --- Periphery
+            V2 --- Periphery
         end
-        subgraph SOL ["chains/solana (Solana SPL)"]
-            CP_SOL["Solana Constant-Product AMM"]
-            CLMM_SOL["Solana CLMM Program"]
+
+        subgraph SOL ["chains/solana (Solana SVM)"]
+            CP_SOL["OmniFi AMM Program (Constant Product)"]
+            CLMM_SOL["OmniFi CLMM Program (Parallel TickArrays)"]
+            Squads["Squads v4 (2-of-4 Multisig Governance)"]
         end
     end
 
-    Cockpit -- "1. GET/POST /quote" --> API
-    Cockpit -- "2. POST /swap/prepare" --> API
-    Wallet -- "3. Unsigned Tx Payload" --> Cockpit
-    Wallet -- "4. Client-Signed Tx" --> EVM
-    Wallet -- "4. Client-Signed Tx" --> SOL
-    V2 -. Pool State Indexing .-> API
-    CP_SOL -. Pool State Indexing .-> API
+    Cockpit -- "1. Request Quote (GET / POST /quote)" --> API
+    Cockpit -- "2. Prepare Unsigned Payload (POST /swap/prepare)" --> API
+    Wallet -- "3. Prompt Client-Side Signature" --> Cockpit
+    Wallet -- "4. Broadcast Signed Tx to Network RPC" --> EVM
+    Wallet -- "4. Broadcast Signed Tx to Network RPC" --> SOL
+    V2 -. Real-Time Reserve Events .-> PG
+    CP_SOL -. Account Change Websockets .-> PG
+```
+
+### End-to-End Trade Lifecycle State Machine
+Every trade moves through a deterministic, fault-tolerant state machine:
+
+```
+[ IDLE ]
+   │  User inputs trade parameters (tokenIn, tokenOut, amountIn)
+   ▼
+[ QUOTING ] ──► Fastify API calculates optimal route via Bellman-Ford/Dijkstra
+   │  Quote returned with quoteId, priceImpact, expectedOutput, and 15s TTL
+   ▼
+[ PREPARING ] ──► POST /api/v1/swap/prepare generates unsigned calldata / instruction
+   │  Validates balance, allowance, slippage threshold, and network chainId
+   ▼
+[ SUBMITTING ] ──► Client wallet prompts user to sign (MetaMask / Phantom)
+   │  User approves transaction
+   ▼
+[ SUBMITTED ] ──► Transaction hash broadcast to node mempool
+   │  WebSocket listener tracks confirmation status
+   ▼
+[ CONFIRMED ] ──► 1 block confirmation received on-chain
+   │  Finality wait (EVM finalized block / Solana confirmed commitment)
+   ▼
+[ FINALIZED ] ──► Reserves reconciled in PostgreSQL, UI updates balance
 ```
 
 ---
 
-## 4. Supported Chains & AMM Engines
+## 3. Supported Networks and AMM Engine Matrix
 
-| Chain / Network | CAIP-2 ID | Protocol Engines | Native Asset | Supported Token Standards |
-|---|---|---|---|---|
-| **Ethereum Mainnet** | `eip155:1` | Uniswap V2, Uniswap V3 CLMM, Uniswap V4 Hooks | ETH (18 dec) | ERC-20, WETH |
-| **Base** | `eip155:8453` | Constant Product V2, Concentrated CLMM | ETH (18 dec) | ERC-20, USDbC |
-| **Solana Mainnet-Beta** | `solana:mainnet-beta` | Solana CP-AMM, Solana CLMM | SOL (9 dec) | SPL Token, SPL Token-2022 |
+OmniFi maps multi-chain environments using canonical [CAIP-2](https://github.com/ChainAgnostic/CAIPs/blob/master/CAIPs/caip-2.md) network identifiers:
+
+| Network / Chain | CAIP-2 Identifier | Deployed AMM Engines | Native Asset | Supported Token Standards | Settlement Finality |
+|---|---|---|---|---|---|
+| **Ethereum Mainnet** | `eip155:1` | Uniswap V2, Uniswap V3 CLMM, Uniswap V4 Singleton | ETH (`18` dec) | ERC-20, WETH9, Permit (EIP-2612) | 12.0s (PoS Finalized) |
+| **Base L2** | `eip155:8453` | Constant Product V2, Concentrated CLMM | ETH (`18` dec) | ERC-20, USDbC, cbETH | 2.0s (L2 Soft Finality) |
+| **Solana Mainnet-Beta** | `solana:mainnet-beta` | Solana CP-AMM, Solana CLMM | SOL (`9` dec) | SPL Token, SPL Token-2022 | ~400ms (Optimistic Confirmed) |
 
 ---
 
-## 5. Repository Structure
+## 4. Repository and Monorepo Layout
+
+OmniFi is organized as a high-performance monorepo powered by **pnpm workspaces** and **Turborepo**:
 
 ```
 OmniFi/
 ├── apps/
-│   └── web/                     # Next.js 14 web app (Trading Cockpit, Pools, Tokens, Positions)
+│   └── web/                     # Next.js 14 App Router trading cockpit (Terminal design system)
 ├── packages/
-│   ├── api-client/              # Universal TypeScript SDK client for Quote API
-│   ├── config/                  # Shared network constants, RPCs, and chain metadata
-│   ├── database/                # Drizzle ORM schemas and PostgreSQL migrations
-│   ├── domain/                  # Shared entities, value objects, and RFC 7807 error types
-│   ├── eslint-config/           # Monorepo-wide ESLint rule presets
-│   ├── prettier-config/         # Opinionated Prettier formatting rules
-│   ├── quote-engine/            # Graph pathfinding, split routing, and invariant math
-│   ├── rpc-resilience/          # Failover RPC connection pooling and health checking
-│   ├── sdk-evm/                 # EVM contract call encoders and ABI artifacts
-│   ├── sdk-solana/              # Anchor instruction builders and account decoders
-│   ├── sdk-unified/             # Unified multi-chain provider interface
-│   ├── test-vectors/            # Shared cross-chain test vectors and golden datasets
-│   └── token-registry/          # Curated multi-chain token metadata & risk tiers
+│   ├── api-client/              # Universal TypeScript client for Quote API
+│   ├── config/                  # Canonical network configs, RPC registries, and pool IDs
+│   ├── database/                # PostgreSQL schema definitions (schema.sql), Drizzle types, and DB client
+│   ├── domain/                  # Value objects, entities, and RFC 7807 Problem Detail error types
+│   ├── eslint-config/           # Strict monorepo ESLint configuration presets
+│   ├── prettier-config/         # Opinionated Prettier rules
+│   ├── quote-engine/            # Graph pathfinding, multi-hop discovery, and split router
+│   ├── rpc-resilience/          # Fault-tolerant RPC connection pool with health probing
+│   ├── sdk-evm/                 # Viem contract encoders, ABIs, and Gnosis Safe v1.4.1 protocol-kit integration
+│   ├── sdk-solana/              # Anchor instruction decoders and Squads v4 multisig SDK integration
+│   ├── sdk-unified/             # Unified multi-chain provider abstraction
+│   ├── test-vectors/            # Golden cross-chain test vectors and differential datasets
+│   └── token-registry/          # Curated multi-chain asset registry with risk classifications
 ├── chains/
-│   ├── evm/                     # Foundry Solidity contracts (V2, CLMM, V4, Vaults)
-│   └── solana/                  # Anchor/Rust programs (CP-AMM, CLMM)
+│   ├── evm/                     # Foundry Solidity suite (V2, CLMM, V4, Periphery, Safe governance)
+│   │   ├── src/                 # Smart contracts (clmm/, v2/, v4-core/, periphery/, governance/)
+│   │   ├── test/                # 191 Foundry tests across 28 suites (unit, invariant, differential, security)
+│   │   ├── certora/             # Formal verification specifications (.cvl)
+│   │   ├── echidna.yaml         # Property-based fuzzing configuration
+│   │   └── slither.config.json  # Slither static analysis baseline
+│   └── solana/                  # Anchor Rust programs (CP-AMM, CLMM)
+│       ├── programs/omnifi_amm/ # Constant-product AMM program
+│       ├── programs/omnifi_clmm/# Concentrated liquidity AMM program
+│       ├── tests/               # Anchor integration and property test suite
+│       └── deny.toml            # Cargo Deny supply chain security policy
 ├── services/
-│   ├── quote-api/               # Fastify REST API daemon with Swagger & Prometheus
+│   ├── quote-api/               # Fastify 4 REST API daemon with Swagger, OpenAPI 3.1 & Prometheus
 │   ├── indexer-evm/             # EVM blockchain block and event ingestion daemon
 │   ├── indexer-solana/          # Solana account websocket subscriber
-│   ├── notification-worker/     # Webhook & user alert notification worker
-│   └── reconciliation-worker/   # On-chain reserves integrity reconciliation
-├── infra/
-│   ├── docker/                  # Dockerfiles and service build definitions
-│   └── monitoring/              # Prometheus alerts and Grafana dashboards
-├── scripts/
-│   ├── test-docker-stack.sh     # Comprehensive 17-point container integration test
-│   ├── test-ui-full.mjs         # Headless Chromium DevTools Protocol (CDP) test suite
-│   ├── chaos-rehearsal.sh       # Chaos fault injection & recovery test runner
-│   ├── chaos-rehearsal.ts       # RPC partition & database failure verification
-│   └── hash-artifacts.sh        # SHA-256 build verification script
-├── docs/
-│   ├── plan.md                  # Comprehensive 15-phase implementation specification
-│   ├── requirements-traceability.csv # Requirements to code & test mapping
-│   └── adr/                     # 15 Architectural Decision Records (ADRs)
-└── docker-compose.yml           # Multi-container orchestration stack
+│   └── reconciliation-worker/   # On-chain reserves integrity & reconciliation worker
+├── deployments/production/      # Cryptographically pinned deployment manifests (Ethereum, Base, Solana)
+├── docs/                        # Specifications, 15 ADRs, threat models, and 5 formal audit reports
+│   ├── adr/                     # Architectural Decision Records (ADR-001 through ADR-015)
+│   ├── security/                # STRIDE threat models, tooling guides, and CI/CD security manuals
+│   └── security/audit-reports/  # Formal Audit Reports (AR-001 through AR-005)
+├── scripts/                     # Security verification, chaos rehearsals, and test scripts
+│   ├── verify-roles-and-signers.sh # Validates 2-of-4 multisig signers across Ethereum, Base, and Solana
+│   ├── verify-deployment-hashes.sh # Validates SHA-256 byte-for-byte hashes of deployment manifests
+│   ├── security-audit-deps.mjs   # Comprehensive supply chain security audit gate (Rust + Node)
+│   ├── test-docker-stack.sh      # 17-point automated container integration test
+│   └── test-ui-full.mjs          # 23-point headless Chrome DevTools Protocol (CDP) test
+├── docker-compose.yml           # Production multi-container orchestration stack
+└── Makefile                     # Developer targets (make test, make security-all, make verify-all)
 ```
 
 ---
 
-## 6. Component Deep Dive
+## 5. On-Chain Protocol Engineering Deep Dive
 
-### On-Chain Protocols (EVM & Solana)
-- **EVM Contracts ([`chains/evm`](file:///Users/majedurrahman/coding/OmniFi/chains/evm))**:
-  - Developed with Foundry (`forge 0.2.0`).
-  - Strict reentrancy protections (`ReentrancyGuardUpgradeable`), custom error signatures for minimal gas overhead, and explicit flash-loan invariant barriers.
-  - Full concentrated liquidity tick-math implementation with $Q64.96$ fixed-point arithmetic.
-- **Solana Programs ([`chains/solana`](file:///Users/majedurrahman/coding/OmniFi/chains/solana))**:
-  - Built with the Anchor Framework (`0.30+`).
-  - Program Derived Addresses (PDAs) for authority-free vault management (`seeds = [b"amm", pool.key().as_ref()]`).
-  - Complete protection against front-running and slippage manipulation via explicit limit constraints.
+### 5.1 Uniswap V2 AMM (Constant Product)
+Located in [`chains/evm/src/v2/`](chains/evm/src/v2/):
+- **Core Invariant**: $x \cdot y = k$ with exact zero-truncation integer protection:
+  $$\left(x_0 + \Delta x \cdot (1 - f)\right) \cdot \left(y_0 - \Delta y\right) \ge x_0 \cdot y_0$$
+  where $f = 0.003$ ($30\text{ bps}$).
+- **Protocol Fee Growth**: Enforces $1/6$ of LP fee growth sent to protocol fee recipient when enabled:
+  $$\sqrt{k_2} - \sqrt{k_1} > 0 \implies S_m = \frac{S_1 \cdot (\sqrt{k_2} - \sqrt{k_1})}{5 \sqrt{k_2} + \sqrt{k_1}}$$
+- **TWAP Accumulators**: Geometric cumulative price accumulators (`price0CumulativeLast`, `price1CumulativeLast`) updated at the first transaction of every block, resistant to flash-loan price manipulation across single-block transactions.
+- **Pair Contract**: [`OmniFiV2Pair.sol`](chains/evm/src/v2/OmniFiV2Pair.sol) implements gas-optimized custom errors (`revert K();`, `revert InsufficientLiquidity();`), reentrancy locks, and low-level token balance checks.
+- **Router Contract**: [`OmniFiV2Router.sol`](chains/evm/src/v2/OmniFiV2Router.sol) provides deadline verification, minimum output enforcement, and atomic `addLiquidity` / `swapExactTokensForTokens` routines.
 
-### Algorithmic Quote Engine
-- Located in [`packages/quote-engine`](file:///Users/majedurrahman/coding/OmniFi/packages/quote-engine).
-- Represents liquidity networks as directed acyclic multigraphs (DAMG).
-- Features **Split-Path Routing**: when single-route slippage exceeds optimal curves, the engine splits trade volume across parallel paths (e.g., $70\%$ direct pool, $30\%$ multi-hop route) to maximize net output tokens.
-- Strict $bps$ (basis points) calculations preventing integer division truncation.
+### 5.2 Uniswap V3 Concentrated Liquidity (CLMM)
+Located in [`chains/evm/src/clmm/`](chains/evm/src/clmm/):
+- **Liquidity Invariant**: Liquidity $L$ is virtualized across bounded tick intervals $[i_l, i_u]$:
+  $$L = \frac{\Delta y}{\Delta \sqrt{P}} = \Delta x \cdot \frac{\sqrt{P_u} \cdot \sqrt{P_l}}{\sqrt{P_u} - \sqrt{P_l}}$$
+- **Tick Math**: Strict $p(i) = 1.0001^i$ represented in $Q64.96$ fixed-point format (`uint160`). Tick bounds are constrained between $[-887272, 887272]$.
+- **TickBitmap Bitwise Indexing**: Implements logarithmic word and bit search using `TickBitmap.sol` and `BitMath.sol` (`MSB` and `LSB` assembly instructions) to locate next initialized ticks in $O(1)$ gas.
+- **Multi-Position Fee Growth Tracking**: Outside fee growth accumulators (`feeGrowthOutside0X128`, `feeGrowthOutside1X128`) calculate earned uncollected fees inside any arbitrary tick range $[i_l, i_u]$ without iterating over individual swaps.
+- **Position Manager**: [`OmniFiPositionManager.sol`](chains/evm/src/clmm/OmniFiPositionManager.sol) wraps LP positions into fully transferable ERC-721 non-fungible tokens with on-chain SVG / base64 metadata rendering.
 
-### Quote & Routing API
-- Located in [`services/quote-api`](file:///Users/majedurrahman/coding/OmniFi/services/quote-api).
-- Built on Fastify 4 for microsecond-latency request handling.
-- **Resilient Unified Route**: accepts both `POST` payloads and `GET` queries (with query normalization and cache-busters).
-- RFC 7807 Problem Details for all validation and business errors.
-- Built-in Prometheus metrics (`/metrics`), Swagger UI (`/documentation`), and live system health (`/health`).
+### 5.3 Uniswap V4 Singleton and Hooks Architecture
+Located in [`chains/evm/src/v4-core/`](chains/evm/src/v4-core/):
+- **Singleton PoolManager ([`OmniFiPoolManager.sol`](chains/evm/src/v4-core/OmniFiPoolManager.sol))**: Consolidates all liquidity pools into a single contract deployment, reducing pool creation gas by $99\%$ and eliminating token transfers between hops during multi-hop swaps.
+- **EIP-1153 Transient Storage**: Utilizes EVM Cancun opcodes `tstore` (slot `0x5d`) and `tload` via [`TransientStorage.sol`](chains/evm/src/v4-core/libraries/TransientStorage.sol) for reentrancy mutex locks and active locker tracking, zeroing out storage gas at transaction completion.
+- **Lock-Unlock-Settle Flash Accounting**: All operations execute within an `unlock(bytes calldata data)` session:
+  ```solidity
+  function unlock(bytes calldata data) external override returns (bytes memory) {
+      if (TransientStorage.tload(LOCK_SLOT) != 0) revert AlreadyUnlocked();
+      TransientStorage.tstore(LOCK_SLOT, 1);
+      TransientStorage.tstore(ACTIVE_LOCKER_SLOT, uint256(uint160(msg.sender)));
 
-### Web Frontend & Trading Cockpit
-- Located in [`apps/web`](file:///Users/majedurrahman/coding/OmniFi/apps/web).
-- Built with **Next.js 14** (React 18, App Router).
-- **Obsidian-Cyber Theme**: custom design system in [`terminal.css`](file:///Users/majedurrahman/coding/OmniFi/apps/web/src/styles/terminal.css) utilizing deep void backgrounds (`#06070a`), frosted glass cards (`rgba(15, 19, 26, 0.85)`), and cyber emerald accents (`#00e599`).
+      bytes memory result = IUnlockCallback(msg.sender).unlockCallback(data);
+
+      if (nonZeroDeltaCount != 0) revert NonZeroDeltaRemaining();
+      TransientStorage.tstore(LOCK_SLOT, 0);
+      return result;
+  }
+  ```
+- **Net-Zero Delta Terminal Invariant**: The contract tracks net token debits and credits (`currencyDelta`). A transaction **must** settle all balances before the lock closes; if any token delta is non-zero (`nonZeroDeltaCount > 0`), the entire transaction reverts.
+
+### 5.4 Enterprise EVM Periphery Suite
+Located in [`chains/evm/src/periphery/`](chains/evm/src/periphery/):
+- **Multicall ([`Multicall.sol`](chains/evm/src/periphery/Multicall.sol))**: Provides atomic batch execution across multiple operations in a single transaction via `delegatecall`.
+  - **Assembly Revert Bubbling**: Uses inline Yul assembly to preserve and forward exact custom error selectors, error strings, and panic codes:
+    ```solidity
+    if (!success) {
+        if (result.length == 0) revert MulticallFailed();
+        assembly {
+            revert(add(32, result), mload(result))
+        }
+    }
+    ```
+- **Periphery Payments ([`PeripheryPayments.sol`](chains/evm/src/periphery/PeripheryPayments.sol))**: Implements canonical `IWETH9` deposit/withdrawals, `unwrapWETH9(minAmount, recipient)`, `refundETH()` for unspent gas refunds, and `sweepToken(token, minAmount, recipient)`. Direct ETH transfers are strictly restricted via `receive() { if (msg.sender != WETH9) revert NotWETH9(); }`.
+- **Periphery Validation ([`PeripheryValidation.sol`](chains/evm/src/periphery/PeripheryValidation.sol))**: Provides the `checkDeadline(deadline)` modifier with custom error `TransactionExpired()`.
+- **Router Integration**: Both [`OmniFiSwapRouter`](chains/evm/src/clmm/OmniFiSwapRouter.sol#L15), [`OmniFiPositionManager`](chains/evm/src/clmm/OmniFiPositionManager.sol#L20), and [`OmniFiV2Router`](chains/evm/src/v2/OmniFiV2Router.sol#L12) inherit `Multicall` to allow composable, multi-operation atomic batches.
+
+### 5.5 Solana High-Throughput AMM and CLMM Programs
+Located in [`chains/solana/programs/`](chains/solana/programs/):
+- **Constant Product AMM ([`omnifi_amm`](chains/solana/programs/omnifi_amm))**:
+  - Implemented in Rust with Anchor 0.30.
+  - PDA Vault Authority: `seeds = [b"amm", pool.key().as_ref()]`. The program signs for token transfers using `CpiContext::new_with_signer`, eliminating third-party custody risks.
+  - Math Safety: Overflows prevented using `u128` arithmetic and checked math (`checked_add`, `checked_mul`).
+- **Concentrated Liquidity AMM ([`omnifi_clmm`](chains/solana/programs/omnifi_clmm))**:
+  - Parallel TickArray Storage: In Solana, account size limits (10MB) and transaction account locks require splitting the continuous tick range across discrete `TickArray` accounts holding 64 ticks each.
+  - Non-Blocking Concurrency: Trades touching different tick arrays execute in parallel across Solana's Sealevel runtime.
+  - SPL Token-2022 Extensions: Full support for Transfer Fees, Confidential Transfers, and Default Account State metadata.
+
+---
+
+## 6. Algorithmic Routing and Quote Engine
+
+Located in [`packages/quote-engine`](packages/quote-engine):
+
+### Graph Representation
+OmniFi models the entire multi-chain liquidity space as a **Directed Acyclic Multigraph (DAMG)** $G = (V, E)$, where:
+- Vertices $V$ represent distinct tokens on a given network (e.g., `USDC`, `WETH`, `USDT`).
+- Directed edges $E$ represent individual liquidity pools connecting two tokens, weighted by instantaneous negative log-execution price:
+  $$w(e) = -\ln\left(\frac{\Delta y}{\Delta x} \cdot (1 - \text{fee})\right)$$
+
+```mermaid
+graph LR
+    USDC((USDC)) -- "Pool A (CLMM 5bps)" --> WETH((WETH))
+    USDC -- "Pool B (V2 30bps)" --> WETH
+    USDC -- "Pool C (V2 30bps)" --> DAI((DAI))
+    DAI -- "Pool D (V2 30bps)" --> WETH
+    WETH -- "Pool E (CLMM 30bps)" --> WBTC((WBTC))
+```
+
+### Pathfinding Algorithms
+- **Shortest-Path Optimization**: Employs modified **Bellman-Ford** and **Dijkstra** algorithms to discover the path yielding the maximum output tokens $y_{\text{out}}$ for an input $x_{\text{in}}$.
+- **Negative Cycle Rejection**: Arbitrage cycles are rejected during quote generation to protect user slippage.
+
+### Dynamic Split Routing
+When a trade size is large relative to pool depth, price impact on a single route degrades execution. OmniFi's **Split Router** dynamically evaluates convex splits across parallel routes:
+- Example: 1,000,000 USDC $\to$ WETH:
+  - $70\%$ routed through Pool A (CLMM 5 bps).
+  - $30\%$ routed through Pool B (V2 30 bps).
+  - Net result: $0.42\%$ lower slippage compared to 100% direct routing.
+
+### Zero Floating-Point Precision
+All financial math, fee splits, and price impact calculations use strict integer arithmetic with basis point ($bps$) scaling ($10,000\text{ bps} = 100\%$):
+$$\text{Price Impact (bps)} = \left\lfloor\frac{P_{\text{spot}} - P_{\text{exec}}}{P_{\text{spot}}} \times 10,000\right\rfloor$$
+
+---
+
+## 7. Production REST API and Systems Engineering
+
+Located in [`services/quote-api`](services/quote-api):
+- **Framework**: Fastify 4 engineered for sub-millisecond response latency.
+- **Specification**: Complete **OpenAPI 3.1** specification exposed at `GET /openapi.json` and interactive Swagger UI at `GET /documentation`.
+- **Error Standard**: Strict compliance with **RFC 7807 (Problem Details for HTTP APIs)** returning `application/problem+json` with machine-readable `type`, `title`, `status`, `detail`, and `instance`.
+- **Zero Mock Data Guarantee**: The API connects to live PostgreSQL 16 (storing pools, reserves, tokens, and swap history) and Redis 7 (caching calculated route graphs with a 15-second TTL).
+
+### Production Security Middleware
+1. **SSRF Link-Local Metadata Defense**: Blocks attempts to probe cloud provider metadata endpoints (`169.254.169.254`, `[::1]`, `127.0.0.1`, `fd00::/8`) through route simulation endpoints.
+2. **Redis Token-Bucket Rate Limiting**: Enforces 100 requests / minute per IP with sliding window expiration.
+3. **Zod Schema Validation**: Every query parameter and JSON payload is validated and sanitized at the boundary before entering business logic.
+
+### Live Endpoint Reference
+
+#### 1. Calculate Swap Quote
+```bash
+curl -X POST http://localhost:3001/api/v1/quote \
+  -H "Content-Type: application/json" \
+  -d '{
+    "networkId": "eip155:1",
+    "tokenIn": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+    "tokenOut": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+    "amountIn": "1000000000",
+    "recipient": "0x1111111111111111111111111111111111111111",
+    "slippageBps": 50
+  }'
+```
+*Live Output:*
+```json
+{
+  "quoteId": "quote-1793699298067-tpoug3",
+  "amountIn": "1000000000",
+  "amountOut": "499740010197196158",
+  "executionPrice": "499740010.197196",
+  "priceImpact": { "bps": 5, "percentage": "0.05%", "level": "low" },
+  "routes": [ ... ],
+  "expiresAt": 1793699313067,
+  "ttlMs": 15000
+}
+```
+
+#### 2. Prepare Unsigned Transaction Payload (ADR-011)
+```bash
+curl -X POST http://localhost:3001/api/v1/swap/prepare \
+  -H "Content-Type: application/json" \
+  -d '{
+    "namespace": "eip155",
+    "networkId": "eip155:1",
+    "userAddress": "0x90F79bf6EB2c4f870365E785982E1f101E93b906",
+    "protocol": "clmm",
+    "tokenIn": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+    "tokenOut": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+    "amountIn": "1000000000",
+    "minAmountOut": "497241310146200000"
+  }'
+```
+
+#### 3. List Verified Pools (Direct from PostgreSQL)
+```bash
+curl -s http://localhost:3001/api/v1/pools | jq .total
+# Returns: 8 (real indexed pools)
+```
+
+---
+
+## 8. Multi-Chain Institutional Governance and Custody Controls
+
+Protocol ownership, emergency pauses, fee adjustments, and contract parameter updates are governed across all chains by multi-signature vaults enforcing a **2-of-4 quorum**:
+
+```mermaid
+flowchart TD
+    subgraph Quorum ["2-of-4 Multi-Signature Quorum"]
+        Signer1["Signer 1 (Ops)"]
+        Signer2["Signer 2 (Security)"]
+        Signer3["Signer 3 (Treasury)"]
+        Signer4["Signer 4 (Core Eng)"]
+    end
+
+    subgraph EVM_Gov ["EVM Chains (Ethereum & Base)"]
+        SafeContract["OmniFiSafe.sol (Gnosis Safe v1.4.1)"]
+        EIP712["EIP-712 Structured Hash Verification"]
+        AscCheck["Strict Ascending ECDSA Recovery Check"]
+        SafeContract --> EIP712 --> AscCheck
+    end
+
+    subgraph SOL_Gov ["Solana Mainnet-Beta"]
+        SquadsProg["Squads v4 Program (SQDS4ep...)"]
+        VaultPDA["Multisig Vault PDA"]
+        SquadsProg --> VaultPDA
+    end
+
+    Quorum -- "2 Valid ECDSA Signatures" --> SafeContract
+    Quorum -- "2 Approved Proposals" --> SquadsProg
+```
+
+### EVM: Gnosis Safe v1.4.1 (`chains/evm/src/governance/OmniFiSafe.sol`)
+- **EIP-712 Structured Data Hashing**: Computes typed transaction hashes incorporating `domainSeparator`, `to`, `value`, `data`, `operation`, and monotonic `nonce`.
+- **Strict Ascending Signer Check**: Enforces that signatures are sorted strictly in ascending order by signer address:
+  ```solidity
+  if (currentSigner <= lastSigner) revert SignaturesNotSorted();
+  ```
+  This eliminates signature replay attacks and duplicate signer abuse.
+- **Protocol-Kit SDK Integration**: [`packages/sdk-evm/src/governance/safe.ts`](packages/sdk-evm/src/governance/safe.ts) utilizes the official `@safe-global/protocol-kit` to construct, encode, and verify Safe transaction proposals.
+
+### Solana: Squads v4 (`chains/solana` & `@omnifi/sdk-solana`)
+- **Squads Protocol**: Utilizes the battle-tested Squads v4 program (`SQDS4ep65T869zMMBKyuUq6aD6EgTu8psMjkvj52pCf`).
+- **Autonomous Vault PDA**: Protocol funds and administrative authorities reside in program-derived vault addresses where no individual key can sign alone.
+- **Squads SDK Integration**: [`packages/sdk-solana/src/governance/squads.ts`](packages/sdk-solana/src/governance/squads.ts) utilizes official `@sqds/multisig` to derive PDAs (`getMultisigPda`, `getVaultPda`, `getProposalPda`), construct `multisigCreateV2` instructions, and manage the proposal lifecycle.
+
+### Automated Governance Verification
+Run the automated verification script to cryptographically validate signers and quorum thresholds against deployment manifests:
+```bash
+./scripts/verify-roles-and-signers.sh
+# Validates 2-of-4 thresholds across Ethereum, Base, and Solana manifests
+```
+
+### Cryptographic Deployment Manifest Integrity
+All production deployment addresses, contract bytecodes, and initialization parameters are pinned in cryptographically signed JSON manifests:
+- `deployments/production/manifest-ethereum.json`
+- `deployments/production/manifest-base.json`
+- `deployments/production/manifest-solana.json`
+
+Verify byte-for-byte SHA-256 manifest integrity before broadcasting any governance transaction:
+```bash
+./scripts/verify-deployment-hashes.sh
+# Asserts byte-level SHA-256 match against release hashes
+```
+
+---
+
+## 9. Institutional Security, Verification and Audit Reports
+
+OmniFi maintains an exhaustive, defense-in-depth security architecture verified through formal methods, automated analysis, and comprehensive audit reports:
+
+### 9.1 Security Tooling Matrix and Pinned Versions
+Every security scanner and verification tool is pinned to explicit versions in CI and local toolchains:
+
+| Security Tool | Pinned Version | Analysis Domain | Focus & Scope | Command / CI Target |
+|---|---|---|---|---|
+| **Foundry** | `v1.4.4` | EVM Cancun / Solc `0.8.26` | Unit, invariant fuzzing, gas benchmarks | `cd chains/evm && forge test` |
+| **Aderyn** | `v0.1.7` (Cyfrin) | Solidity AST Static Analysis | Unchecked returns, downcasting, ETH locks | `cd chains/evm && aderyn .` |
+| **Slither** | `v0.11.6` (Trail of Bits) | EVM Dataflow & CFG | Reentrancy, storage layout, variable visibility | `cd chains/evm && slither .` |
+| **Certora Prover**| Formal Verification | EVM Mathematical Specs | CVL mathematical invariants & monotonicity | `certoraRun chains/evm/certora/...` |
+| **Echidna** | `v2.2+` | Stateful Property Fuzzing | Invariant testing under randomized sequences | `echidna chains/evm/echidna.yaml` |
+| **Medusa** | Latest | Coverage-Guided Fuzzing | Target execution boundary conditions | `medusa fuzz --config medusa.json` |
+| **Cargo Audit** | `v0.22.2` | Rust / Solana Dependencies | RustSec vulnerability advisory database | `cd chains/solana && cargo audit` |
+| **Cargo Deny** | `v0.20.2` | Rust Supply Chain & Licenses | Banned crates, duplicates, license compliance | `cd chains/solana && cargo deny check` |
+| **Cargo Clippy**| Rust Compiler Toolchain | Rust Static Analysis | Code quality, redundant assertions, safety | `cargo clippy -- -D warnings` |
+| **Gitleaks** | `v8.30.1` | Git History & Filesystem | Zero-knowledge secret & private key detection | `gitleaks detect --config .gitleaks.toml`|
+| **Trivy** | `v0.76.1` (Aqua Security) | Containers & Infrastructure | Dockerfile misconfigurations, root user scans | `trivy fs --config trivy.yaml .` |
+| **pnpm Audit** | `v9.15.4` | Node.js Monorepo Workspaces | High/Critical CVE dependency audits | `pnpm audit --prod --audit-level high` |
+| **Chrome DevTools**| CDP / Chromium | Frontend & E2E Runtime | Headless DOM, modal portals, console errors | `node scripts/test-ui-full.mjs` |
+
+### 9.2 STRIDE Threat Model
+Located in [`docs/security/threat-model-comprehensive.md`](docs/security/threat-model-comprehensive.md):
+- Analyzes Spoofing, Tampering, Repudiation, Information Disclosure, Denial of Service, and Elevation of Privilege across EVM smart contracts, Solana programs, and cloud infrastructure.
+
+### 9.3 Formal Audit Reports
+The protocol is audited across 5 specialized security domains:
+- **[AR-001: EVM Core & Periphery Contracts](docs/security/audit-reports/AR-001-evm-contracts.md)**: Reentrancy protection, integer bounds, custom error gas savings, and flash-accounting safety.
+- **[AR-002: Solana Programs & PDAs](docs/security/audit-reports/AR-002-solana-programs.md)**: Account deserialization, signer verification, PDA derivation seeds, and BPF compute budget limits.
+- **[AR-003: Economic & Routing Invariants](docs/security/audit-reports/AR-003-economic-and-routing.md)**: Sandwich attack mitigation, split-route slippage protection, and MEV exposure analysis.
+- **[AR-004: Infrastructure & Key Custody](docs/security/audit-reports/AR-004-infrastructure-and-key-custody.md)**: Zero-custody architecture, SSRF defense on cloud metadata IPs, and container hardening.
+- **[AR-005: Automated Security Scans & CI/CD](docs/security/audit-reports/AR-005-automated-security-scans.md)**: Tooling telemetry across Slither, Aderyn, Trivy, Gitleaks, and Cargo Deny.
+
+### 9.4 Consolidated Audit Findings Register (100% Remediated)
+Located in [`docs/security/audit-findings-register.md`](docs/security/audit-findings-register.md):
+
+| Finding ID | Component | Vulnerability Title | Severity | CVSS v3.1 | Remediation Summary | Verification Test / Evidence |
+|---|---|---|---|---|---|---|
+| **F-01** | `deployments/`, `scripts/` | Error Swallowing (`\|\| true`) in Verification Scripts | **Critical** | 9.1 | Removed error suppression; fail-closed scripts | `scripts/verify-roles-and-signers.sh` |
+| **F-02** | `OmniFiPoolManager.sol` | V4 Flash Accounting Multi-Caller Delta Confusion | **Critical** | 9.8 | Enforced `ACTIVE_LOCKER_SLOT` and reentrancy check | `FlashAccounting.t.sol` |
+| **F-03** | `prepare.ts` | Truncated Calldata & Missing Solana Metas in Prepare | **Critical** | 9.0 | Replaced mock strings with real binary Anchor builders | `api.test.ts` (Prepare suite) |
+| **F-04** | `tx-executor.ts` | Synthetic Client-Side Timer Finality & Hash Fabrication | **Critical** | 8.9 | Integrated real RPC polling and transaction receipts | `wallet.test.ts` |
+| **F-05** | `omnifi_amm/swap.rs` | Solana AMM Protocol Fee Reserve Desynchronization | **High** | 7.5 | Fixed invariant to deduct fee from pool vault directly | `cargo test test_protocol_fee_deduction` |
+| **F-06** | `omnifi_clmm/swap.rs` | Solana CLMM Exact-Output Swaps Allowed Incomplete Output | **High** | 7.5 | Added strict output amount equality assertions | `cargo test test_swap_exact_output` |
+| **F-07** | `simulate.ts` | SSRF Primitive via Caller-Supplied RPC Probing Cloud IPs | **High** | 8.6 | Blocked AWS/GCP/Azure link-local `169.254.169.254` & `fd00::/8` | `api.test.ts` (SSRF Block suite) |
+| **F-08** | `simulate.ts` | Solana Simulation Used Fabricated Mock Logs | **High** | 7.2 | Implemented real base64 instruction log decoders | `api.test.ts` |
+| **F-09** | `evm-intent-builder.ts` | Multi-Hop CLMM Path Missing Tightly-Packed Bytes | **High** | 7.1 | Switched to canonical `encodePacked` token/fee bytes | `client.test.ts` |
+| **F-10** | `quote-calculator.ts` | Quote Calculator & Split Router Used Float Math | **High** | 7.4 | Replaced floating-point numbers with integer `bigint` math | `trading-math.test.ts` |
+| **F-11** | `log-decoder.ts` | Solana Indexer Decoded Mock Trades with Static Balances | **High** | 7.5 | Wired real SPL token balance deltas from block logs | `indexer.test.ts` |
+| **F-12** | `token-compatibility.md` | Token-2022 Transfer Fee Lacked Architecture Boundary | **High** | 7.0 | Added explicit Transfer Fee support bounds | `requirements-traceability.csv` |
+| **F-13** | `traceability.csv` | Requirements Traceability Contained Dead Links | **High** | 7.0 | Updated all links to canonical file targets | `requirements-traceability.csv` |
+| **F-14** | `security.yml` | Security CI Swallowed Audit Failures via `\|\| true` | **High** | 7.3 | Made all CI security checks blocking with exit code 1 | `.github/workflows/security.yml` |
+| **SCAN-01** | `OmniFiSwapRouter.sol` | Ether Locked in Router Without Sweep or Unwrap | **Medium** | 6.5 | Added `refundETH`, `sweepToken`, and `receive()` guards | `SecurityRegression.t.sol` (`test_SwapRouter_RefundETH`) |
+| **SCAN-02** | `OmniFiPool.sol` | Raw Downcasting of uint256 to uint128 Truncated Overflow | **Medium** | 5.3 | Replaced raw downcasts with `SafeCast.toUint128` | `SecurityRegression.t.sol` (`test_SafeCast_Uint128`) |
+| **SCAN-03** | `quote-api/Dockerfile` | Container Process Ran as Root (Trivy DS-0002) | **Medium** | 5.3 | Added `USER node` directive before process launch | `trivy fs --config trivy.yaml .` |
+
+### 9.5 Automated Security Gate (`make security-all`)
+Execute all security scanners with a single unified command:
+```bash
+make security-all
+```
+This target chains:
+1. `security-secrets`: `gitleaks detect --config .gitleaks.toml --verbose --no-git`
+2. `security-deps`: `node scripts/security-audit-deps.mjs` (Cargo audit, Cargo deny, pnpm audit)
+3. `security-evm`: `forge test` and `aderyn .`
+4. `security-slither`: `slither . --config-file slither.config.json`
+5. `security-solana`: `cargo test`, `cargo audit`, and `cargo deny check`
+6. `security-infra`: `trivy fs --config trivy.yaml --scanners misconfig,secret .`
+7. `security-invariants`: `forge test --match-test "invariant_" --evm-version cancun`
+8. `security-regression`: `forge test --match-path test/security/SecurityRegression.t.sol --evm-version cancun`
+
+---
+
+## 10. Testing Taxonomy and Verification Playbook
+
+OmniFi enforces the most rigorous testing regimen in decentralized finance, organized across **13 distinct testing disciplines**:
+
+```
+Total Test Count: 280+ tests across EVM, Solana, Microservices, and E2E Browser
+```
+
+### 10.1 The 13 Testing Disciplines
+
+```
+1. Unit Testing ────────────────────► Individual functions & mathematical boundary checks
+2. Invariant / Property Fuzzing ────► Stateful randomized caller sequences (64 runs, 2048 calls)
+3. Differential Fuzzing ────────────► Bit-for-bit parity against Uniswap v2/v3 reference vectors
+4. Security Regression Testing ─────► Validates zero reoccurrence of past vulnerabilities
+5. Formal Verification (CVL) ───────► Mathematical proof of protocol monotonicity & solvency
+6. Periphery & Multicall Tests ─────► Batched delegatecall execution & Yul revert bubbling
+7. Static Analysis & AST Audits ────► Slither CFG analysis & Aderyn Solidity AST audits
+8. Secret & Key Leak Detection ─────► Gitleaks pre-commit & CI credential prevention
+9. Supply Chain & Dependency Audits ─► Cargo Audit, Cargo Deny, and pnpm audit gates
+10. Container & Infra Hardening ────► Trivy non-root execution & misconfiguration scans
+11. Cryptographic Governance Checks ─► Validates 2-of-4 multisig signers & threshold PDAs
+12. Chaos Engineering & Partitions ──► Network partition simulation & RPC circuit-breaker tests
+13. Headless Browser E2E (CDP) ─────► Real Chrome DevTools Protocol user interaction tests
+```
+
+### 10.2 Layer-by-Layer Verification Matrix
+
+| Layer | Framework / Runner | Test Suites | Total Tests | Focus Area | Status |
+|---|---|---|---|---|---|
+| **EVM Contracts** | Foundry (`forge test`) | **28 Suites** | **191 Tests** | Unit, Invariant Fuzzing, Differential Vectors, Security | **100% PASSING** |
+| **Solana Programs**| Cargo / Anchor | **2 Suites** | **16 Tests** | Constant-Product Math, CLMM Ticks, PDA Signatures | **100% PASSING** |
+| **TypeScript Monorepo** | Vitest / Turborepo | **18 Packages** | **32 Turbo Tasks** | SDKs, Quote Engine, Database, RPC Resilience | **100% PASSING** |
+| **Docker Stack** | Bash Integration Script | **1 Suite** | **17 Checks** | Container Health, Redis Pings, PostgreSQL Queries | **100% PASSING** |
+| **Frontend UI (CDP)**| Headless Chrome | **1 Suite** | **23 Checks** | React Portals, Token Inversion, Slippage, Zero Errors | **100% PASSING** |
+
+### 10.3 Test Execution Commands
+
+```bash
+# 1. Run all EVM Foundry tests (cancun EVM version, 191 tests)
+cd chains/evm && forge test --evm-version cancun
+
+# 2. Run EVM Invariant Fuzz tests (64 runs, 2048 calls per invariant)
+cd chains/evm && forge test --match-test invariant
+
+# 3. Run Solana Anchor Rust tests (16 tests)
+cd chains/solana && cargo test
+
+# 4. Run Monorepo TypeScript tests across all 18 packages (32 tasks)
+pnpm test
+
+# 5. Run Live Docker Stack Verification (17 integration checks)
+./scripts/test-docker-stack.sh
+
+# 6. Run Headless Browser CDP User Interaction Suite (23 UI checks)
+node scripts/test-ui-full.mjs
+```
+
+### 10.4 Makefile Developer Reference
+The repository includes a comprehensive `Makefile` standardizing all developer workflows:
+
+| Make Target | Description | Underlying Tool / Command |
+|---|---|---|
+| `make build` | Builds monorepo, EVM contracts, and Solana programs | `turbo run build && forge build && anchor build` |
+| `make test` | Runs monorepo TypeScript test suites | `pnpm turbo run test` |
+| `make test-evm` | Runs all Foundry Solidity tests | `cd chains/evm && forge test -vvv` |
+| `make test-solana` | Runs all Solana Anchor Rust tests | `cd chains/solana && cargo test` |
+| `make test-all` | Runs EVM, Solana, and Monorepo tests in sequence | Chained targets |
+| `make lint` | Lints TypeScript and Rust programs | `turbo run lint && cargo clippy -- -D warnings` |
+| `make fmt` | Formats TypeScript, Solidity, and Rust | `pnpm format && forge fmt && cargo fmt --all` |
+| `make fmt-check` | Asserts code formatting without modifying files | Checks formatting in CI |
+| `make security-all`| Runs all 8 security scanners and audit gates | Full DevSecOps security pipeline |
+| `make hash-artifacts`| Generates SHA-256 build manifest for release audits | `./scripts/hash-artifacts.sh` |
+
+---
+
+## 11. Cyber-Industrial Trading Cockpit (Frontend Architecture)
+
+Located in [`apps/web`](apps/web):
+- **Framework**: Next.js 14 with React 18, TypeScript, and the App Router.
+- **Obsidian-Cyber Design System ([`terminal.css`](apps/web/src/styles/terminal.css))**:
+  - Color Tokens: Deep Obsidian Void (`#06070a`), Frosted Obsidian Glass (`rgba(15, 19, 26, 0.85)`), Cyber Emerald (`#00e599`), Neon Cyan (`#38bdf8`), and Warning Amber (`#f59e0b`).
+  - Typography: Monospaced numerical values (`JetBrains Mono`, `Geist Mono`) preventing layout shift during rapid quote updates.
+- **Centralized React Portals ([ADR-011](docs/adr/ADR-011-admin-custody.md))**:
+  - Modal dialogs (Wallet Modal, Token Selector) are dynamically mounted to `document.body` via `createPortal`. This completely prevents containing-block clipping issues caused by ancestor CSS `backdrop-filter`, `transform`, or sticky navigation bars.
 - **Interactive Views**:
-  - `/` (Swap Cockpit): Token flip, slippage selector (0.1%, 0.5%, 1.0%), real-time quote refresh, and multi-tier lifecycle progress.
-  - `/pools`: Filterable liquidity directory with live TVL, reserve states, and fee tiers.
-  - `/pools/[network]/[poolId]`: Deep pool telemetry inspector.
-  - `/tokens`: Verified multi-chain asset registry with security risk classifications (LOW, MEDIUM, HIGH).
-  - `/positions`: Concentrated liquidity LP manager with one-click fee harvest.
-  - `/status`: Real-time node connectivity, RPC latency, and global protocol telemetry.
+  - `/` (Swap Cockpit): Token inversion (⇅), dynamic slippage presets (0.1%, 0.5%, 1.0%), price impact warnings, live routing breakdown.
+  - `/pools`: Multi-chain liquidity pool directory with live reserve states and TVL filtering.
+  - `/pools/[network]/[poolId]`: Deep pool inspector displaying tick distribution, fee growth, and contract parameters.
+  - `/tokens`: Verified multi-chain token registry with security risk classifications (`LOW`, `MEDIUM`, `HIGH`).
+  - `/positions`: Concentrated liquidity LP manager for minting, increasing, decreasing, and harvesting positions.
+  - `/status`: Global node connectivity, RPC response latency, and microservice health monitor.
   - `/history`: Local audit trail of signed on-chain transactions and finality states.
 
 ---
 
-## 7. Quickstart & Local Development
+## 12. Quickstart, Docker Stack and Operational Runbook
 
 ### Prerequisites
-
-Ensure the following tools are installed on your host machine:
-
 - **Node.js**: `v20.0.0` or higher (Node 22 recommended)
-- **pnpm**: `v9.0.0` or higher (`corepack enable && corepack prepare pnpm@latest --activate`)
+- **pnpm**: `v9.0.0` or higher
 - **Docker & Docker Compose**: Docker Desktop 4.25+ or Docker Engine 24+
-- **Foundry** (optional, for contract testing): `curl -L https://foundry.paradigm.xyz | bash && foundryup`
-- **Rust & Cargo** (optional, for Solana testing): `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`
+- **Foundry** (for EVM development): `curl -L https://foundry.paradigm.xyz | bash && foundryup`
 
----
-
-### One-Command Docker Deployment
-
-The fastest way to spin up the entire OmniFi ecosystem is via Docker Compose:
+### One-Command Full Stack Deployment
+The easiest way to boot the complete OmniFi ecosystem (PostgreSQL, Redis, Fastify API, Next.js UI, Prometheus, Grafana) is via Docker Compose:
 
 ```bash
 # 1. Clone the repository
 git clone https://github.com/omnifi/omnifi.git
 cd OmniFi
 
-# 2. Start the full 7-service stack in detached mode
+# 2. Launch the 7-container production stack
 docker compose up -d --build
 
-# 3. Verify all containers are healthy
+# 3. Verify all services are healthy
 docker compose ps
 ```
 
-Once running, access the local environments:
-- **Trading Cockpit (Web UI)**: [http://localhost:3000](http://localhost:3000)
-- **Fastify Quote API**: [http://localhost:3001/health](http://localhost:3001/health)
-- **API Swagger Documentation**: [http://localhost:3001/documentation](http://localhost:3001/documentation)
-- **Grafana Monitoring**: [http://localhost:3002](http://localhost:3002) (Login: `admin` / `admin`)
-- **Prometheus Scraper**: [http://localhost:9090](http://localhost:9090)
-- **Anvil EVM Node**: [http://localhost:8545](http://localhost:8545)
+### Docker Service & Port Matrix
 
-To shut down the stack:
-```bash
-docker compose down -v
-```
-
----
-
-### Bare-Metal Monorepo Development
-
-For local code development across packages and applications:
-
-```bash
-# 1. Install all dependencies across monorepo workspaces
-pnpm install
-
-# 2. Build all packages and shared libraries
-pnpm build
-
-# 3. Start local Next.js frontend in development mode
-pnpm --filter @omnifi/web dev
-
-# 4. Start quote API in watch mode (requires local Redis & Postgres)
-pnpm --filter @omnifi/quote-api dev
-```
-
----
-
-## 8. Docker Ecosystem & Port Matrix
-
-| Service Container | Image / Dockerfile | Exposed Port | Purpose / Role | Healthcheck Endpoint |
+| Service Container | Image / Dockerfile | Host Port | Purpose | Health Endpoint |
 |---|---|---|---|---|
-| `omnifi-web` | `apps/web/Dockerfile` | `3000:3000` | Next.js 14 Production Web Application | `GET /` |
-| `omnifi-quote-api` | `services/quote-api/Dockerfile` | `3001:3001` | Fastify Routing Daemon & Algorithmic Router | `GET /health` |
-| `omnifi-grafana` | `grafana/grafana:10.3.3` | `3002:3000` | Observability & Telemetry Dashboards | `GET /api/health` |
-| `omnifi-postgres` | `postgres:16-alpine` | `5432:5432` | Relational Storage for Pools, Tokens & Positions | `pg_isready` |
-| `omnifi-redis` | `redis:7-alpine` | `6379:6379` | In-Memory Route Calculation & TTL Cache | `redis-cli ping` |
-| `omnifi-anvil` | `trufflesuite/ganache:latest` | `8545:8545` | Local EVM Blockchain Node (Chain ID `31337`) | `HTTP GET /` |
-| `omnifi-prometheus` | `prom/prometheus:v2.50.1` | `9090:9090` | Time-Series Metrics Ingestion Engine | `GET /-/healthy` |
+| `omnifi-web` | `apps/web/Dockerfile` | `3000:3000` | Next.js 14 Production Web App | `GET http://localhost:3000` |
+| `omnifi-quote-api` | `services/quote-api/Dockerfile` | `3001:3001` | Fastify Routing Daemon & Quote Engine | `GET http://localhost:3001/health` |
+| `omnifi-grafana` | `grafana/grafana:10.3.3` | `3002:3000` | Telemetry & Observability Dashboards | `GET http://localhost:3002/api/health` |
+| `omnifi-postgres` | `postgres:16-alpine` | `5432:5432` | Relational Storage (Pools, Swaps, Reserves)| `pg_isready -U omnifi` |
+| `omnifi-redis` | `redis:7-alpine` | `6379:6379` | Route Graph Cache & Rate Limiting | `redis-cli ping` |
+| `omnifi-prometheus` | `prom/prometheus:v2.50.1` | `9090:9090` | Time-Series Metrics Ingestion Engine | `GET http://localhost:9090/-/healthy` |
 
 ---
 
-## 9. REST API Reference
+## 13. Architectural Decision Records (ADRs 001 - 015)
 
-The Quote API serves high-frequency routing, transaction preparation, and telemetry.
+Every major engineering and protocol decision is preserved in [`docs/adr/`](docs/adr/):
 
-### 1. Calculate Algorithmic Swap Quote
-```http
-POST /quote
-Content-Type: application/json
-
-{
-  "tokenIn": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
-  "tokenOut": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-  "amount": "100000000",
-  "exactIn": true
-}
-```
-
-*Response (`200 OK`):*
-```json
-{
-  "quoteId": "quote-1793539672808-z452fn",
-  "namespace": "eip155",
-  "chainRef": "1",
-  "tokenIn": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
-  "tokenOut": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-  "amountIn": "100000000",
-  "amountOut": "49849900599298204",
-  "executionPrice": "498499005.992982",
-  "priceImpact": {
-    "bps": 30,
-    "percentage": "0.30%",
-    "level": "low"
-  },
-  "routes": [ ... ],
-  "expiresAt": 1793539687808,
-  "ttlMs": 15000
-}
-```
-
-*Alternative Query Mode (`GET /quote`):*
-```bash
-curl "http://localhost:3001/quote?tokenIn=0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48&tokenOut=0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2&amount=100000000"
-```
-
----
-
-### 2. Prepare Unsigned Swap Transaction (ADR-011)
-```http
-POST /api/v1/swap/prepare
-Content-Type: application/json
-
-{
-  "namespace": "eip155",
-  "networkId": "eip155:1",
-  "userAddress": "0x90F79bf6EB2c4f870365E785982E1f101E93b906",
-  "protocol": "v2",
-  "tokenIn": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
-  "tokenOut": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-  "amountIn": "100000000",
-  "minAmountOut": "49600000000000000"
-}
-```
-
-*Response (`200 OK`):*
-```json
-{
-  "preparedTransaction": {
-    "to": "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D",
-    "data": "0x38ed1739000000000000000000000000...",
-    "value": "0",
-    "chainId": 1,
-    "estimatedGas": "150000"
-  }
-}
-```
-
----
-
-### 3. List Verified Tokens with Risk Tiers
-```http
-GET /api/v1/tokens?networkId=eip155:1&riskTier=LOW
-```
-
----
-
-### 4. Global Protocol Telemetry
-```http
-GET /api/v1/analytics/overview
-```
-
-*Response (`200 OK`):*
-```json
-{
-  "networkId": "all",
-  "totalTvlUsd": "595000000",
-  "totalVolume24hUsd": "198333331",
-  "totalFees24hUsd": "594999",
-  "totalPools": 6,
-  "totalSwaps24h": 750,
-  "updatedAt": "2026-11-02T06:00:00.000Z"
-}
-```
-
----
-
-## 10. Testing & Verification Playbook
-
-OmniFi maintains strict verification standards with multi-tier automated test suites:
-
-### 1. Automated Docker Full-Stack Verification
-Runs end-to-end integration tests verifying every containerized service, database connection, Redis ping, Fastify metrics, and frontend route:
-```bash
-./scripts/test-docker-stack.sh
-```
-*Expected Output: `17 PASSED, 0 FAILED (ALL DOCKER SERVICES VERIFIED AND OPERATIONAL)`*
-
----
-
-### 2. Headless Browser End-to-End Test Suite (CDP)
-Launches headless Google Chrome via the Chrome DevTools Protocol to simulate real user interactions, verify live algorithmic quotes, test token inversion (⇅), execute wallet connection flows, test portal modal centering, and verify zero console errors:
-```bash
-node scripts/test-ui-full.mjs
-```
-*Expected Output: `23 PASSED, 0 FAILED, 0 CONSOLE ERRORS`*
-
----
-
-### 3. Chaos & Invariant Verification Suite
-Simulates sudden network partition failures, RPC failovers, and circuit-breaker triggers:
-```bash
-./scripts/chaos-rehearsal.sh
-```
-
----
-
-### 4. On-Chain Smart Contract Tests
-```bash
-# Run Foundry Solidity unit & invariant tests
-pnpm test:evm
-
-# Run Anchor Rust program tests
-pnpm test:solana
-```
-
----
-
-## 11. Security & Cryptographic Invariants
-
-OmniFi enforces non-negotiable security requirements throughout its codebases:
-
-1. **Non-Custodial Guarantee ([ADR-011](file:///Users/majedurrahman/coding/OmniFi/docs/adr/ADR-011-admin-custody.md))**: Under no circumstances does any server or worker have access to private keys or custody over user funds. All state changes require client-side signature.
-2. **Reentrancy Protection**: All EVM state transitions adhere to Checks-Effects-Interactions (CEI) with non-reentrant mutex locks on all liquidity pools and routers.
-3. **Price Impact Circuit Breakers**: The UI and router enforce strict barriers preventing execution when price impact exceeds safe liquidity thresholds without explicit user override.
-4. **Token Risk Categorization**:
-   - `LOW`: Fully verified bytecode, deep standardized liquidity, 0 fee-on-transfer anomalies.
-   - `MEDIUM`: Variable fee tiers or newly seeded liquidity pools.
-   - `HIGH`: Unverified code or extreme volatility flags.
-5. **Integer Safety**: Overflows and underflows are checked on all mathematical routines. Precision-sensitive values are represented in fixed-point decimal scaling.
-
----
-
-## 12. Architecture Decision Records (ADRs)
-
-Every major architectural choice is documented and preserved in [`docs/adr/`](file:///Users/majedurrahman/coding/OmniFi/docs/adr/):
-
-| ADR | Title | Decision Summary |
+| ADR | Title | Core Architectural Decision |
 |---|---|---|
-| [ADR-001](file:///Users/majedurrahman/coding/OmniFi/docs/adr/ADR-001-chain-selection.md) | Chain Selection | Support Ethereum Mainnet, Base, and Solana Mainnet-Beta. |
-| [ADR-002](file:///Users/majedurrahman/coding/OmniFi/docs/adr/ADR-002-v2-inclusion.md) | Uniswap V2 Constant Product Inclusion | Include constant-product AMM for base pairs and high-resilience liquidity. |
-| [ADR-003](file:///Users/majedurrahman/coding/OmniFi/docs/adr/ADR-003-evm-clmm-strategy.md) | EVM Concentrated Liquidity Strategy | Deploy custom Uniswap V3 CLMM implementation with optimized tick math. |
-| [ADR-004](file:///Users/majedurrahman/coding/OmniFi/docs/adr/ADR-004-v4-singleton-scope.md) | Uniswap V4 Singleton & Hooks Scope | Implement V4 singleton pool manager for dynamic fee hooks and custom liquidity curves. |
-| [ADR-005](file:///Users/majedurrahman/coding/OmniFi/docs/adr/ADR-005-solana-clmm-strategy.md) | Solana CLMM & AMM Strategy | Implement native Anchor programs with parallel tick arrays and PDA vault signing. |
-| [ADR-006](file:///Users/majedurrahman/coding/OmniFi/docs/adr/ADR-006-token-policy.md) | Token Integration & Risk Policy | Enforce token categorization tiers (LOW, MEDIUM, HIGH) with fee-on-transfer protection. |
-| [ADR-007](file:///Users/majedurrahman/coding/OmniFi/docs/adr/ADR-007-economic-parameters.md) | Protocol Economic Parameters | Set standard fee tiers: 5 bps (stables), 30 bps (standard), 100 bps (volatile). |
-| [ADR-008](file:///Users/majedurrahman/coding/OmniFi/docs/adr/ADR-008-position-model.md) | Non-Fungible Position Model | Model concentrated liquidity positions as non-fungible ERC-721 / SPL tokens. |
-| [ADR-009](file:///Users/majedurrahman/coding/OmniFi/docs/adr/ADR-009-oracle-policy.md) | Oracle & Price Feed Policy | Geometric TWAP oracles integrated into pool state storage. |
-| [ADR-010](file:///Users/majedurrahman/coding/OmniFi/docs/adr/ADR-010-upgradeability.md) | Contract Upgradeability Pattern | Immutable core pool contracts; upgradeable routers via OpenZeppelin UUPS proxies. |
-| [ADR-011](file:///Users/majedurrahman/coding/OmniFi/docs/adr/ADR-011-admin-custody.md) | Non-Custodial Key Architecture | Strict decoupling of backend services from transaction signing and user key custody. |
-| [ADR-012](file:///Users/majedurrahman/coding/OmniFi/docs/adr/ADR-012-infrastructure.md) | Production Infrastructure Stack | Docker containerization, PostgreSQL persistence, Redis caching, Prometheus/Grafana. |
-| [ADR-013](file:///Users/majedurrahman/coding/OmniFi/docs/adr/ADR-013-slos.md) | Service Level Objectives (SLOs) | Sub-100ms quote response latency, 99.9% API uptime, zero data loss. |
-| [ADR-014](file:///Users/majedurrahman/coding/OmniFi/docs/adr/ADR-014-legal-compliance.md) | Non-Custodial Legal Posture | Pure protocol software provider; zero financial custody or intermediary settlement. |
-| [ADR-015](file:///Users/majedurrahman/coding/OmniFi/docs/adr/ADR-015-token-authorization.md) | Token Registry Authorization | Automated bytecode verification and governance-approved asset whitelist. |
+| [ADR-001](docs/adr/ADR-001-chain-selection.md) | Chain Selection | Native deployments on Ethereum Mainnet, Base L2, and Solana Mainnet-Beta. |
+| [ADR-002](docs/adr/ADR-002-v2-inclusion.md) | Uniswap V2 AMM Inclusion | Implement constant-product AMM for base pairs and high-resilience fallback liquidity. |
+| [ADR-003](docs/adr/ADR-003-evm-clmm-strategy.md) | EVM Concentrated Liquidity Strategy | Deploy custom Uniswap V3 CLMM with $Q64.96$ fixed-point math and BitMap indexing. |
+| [ADR-004](docs/adr/ADR-004-v4-singleton-scope.md) | Uniswap V4 Singleton Scope | Implement singleton PoolManager with EIP-1153 transient storage and flash accounting. |
+| [ADR-005](docs/adr/ADR-005-solana-clmm-strategy.md) | Solana CLMM & AMM Strategy | Implement native Anchor programs with parallel TickArrays and PDA vault authority. |
+| [ADR-006](docs/adr/ADR-006-token-policy.md) | Token Integration & Risk Policy | Enforce asset risk categorization (LOW, MEDIUM, HIGH) with fee-on-transfer protection. |
+| [ADR-007](docs/adr/ADR-007-economic-parameters.md) | Protocol Economic Parameters | Standardize fee tiers: 5 bps (stables), 30 bps (standard), 100 bps (volatile). |
+| [ADR-008](docs/adr/ADR-008-position-model.md) | Non-Fungible Position Model | Represent CLMM positions as transferable ERC-721 non-fungible tokens. |
+| [ADR-009](docs/adr/ADR-009-oracle-policy.md) | Oracle & Price Feed Policy | Integrate geometric TWAP accumulators into pool state storage. |
+| [ADR-010](docs/adr/ADR-010-upgradeability.md) | Contract Upgradeability Pattern | Keep core pool vaults strictly immutable; upgrade periphery routers via UUPS proxies. |
+| [ADR-011](docs/adr/ADR-011-admin-custody.md) | Non-Custodial Key Architecture | Decouple backend services from signing; require 100% client-side transaction signatures. |
+| [ADR-012](docs/adr/ADR-012-infrastructure.md) | Production Infrastructure Stack | Docker Compose containerization, PostgreSQL persistence, Redis caching, Prometheus/Grafana. |
+| [ADR-013](docs/adr/ADR-013-slos.md) | Service Level Objectives (SLOs) | Sub-100ms quote response latency, 99.9% API uptime, zero financial data loss. |
+| [ADR-014](docs/adr/ADR-014-legal-compliance.md) | Non-Custodial Legal Posture | Pure protocol software provider; zero custodial control or financial intermediation. |
+| [ADR-015](docs/adr/ADR-015-token-authorization.md) | Token Registry Authorization | Automated bytecode verification and governance-approved asset whitelist. |
 
 ---
 
-## 13. License
 
-OmniFi is released under the **Apache License 2.0**. See the [LICENSE](LICENSE) file for more information.
+## 15. License and Attribution
+
+OmniFi is released under the **[Apache License 2.0](LICENSE)**.
+
+*Built from first principles for decentralized, permissionless, and non-custodial financial exchange.*

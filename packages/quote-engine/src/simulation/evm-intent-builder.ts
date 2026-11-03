@@ -1,7 +1,8 @@
-import { AssetRef, SwapQuote, TransactionIntent } from '@omnifi/domain';
+import { AssetRef, RouteHop, SwapQuote, TransactionIntent } from '@omnifi/domain';
 import {
   createPublicClient,
   encodeFunctionData,
+  encodePacked,
   Hex,
   http,
   parseAbi,
@@ -112,17 +113,45 @@ export function buildEvmTransactionIntent(params: BuildEvmIntentParams): Transac
       deadline,
     });
   } else {
-    // CLMM single swap or multi-hop
-    callData = encodeEvmClmmSingleSwap({
-      routerAddress,
-      tokenIn: firstRoute.hops[0]!.tokenIn.address as `0x${string}`,
-      tokenOut: firstRoute.hops[0]!.tokenOut.address as `0x${string}`,
-      fee: firstRoute.hops[0]!.feeTier,
-      recipient,
-      deadline,
-      amountIn: quote.amountIn,
-      amountOutMinimum: amountOutMin,
-    });
+    // CLMM single swap or multi-hop path encoding
+    if (firstRoute.hops.length === 1) {
+      callData = encodeEvmClmmSingleSwap({
+        routerAddress,
+        tokenIn: firstRoute.hops[0]!.tokenIn.address as `0x${string}`,
+        tokenOut: firstRoute.hops[0]!.tokenOut.address as `0x${string}`,
+        fee: firstRoute.hops[0]!.feeTier,
+        recipient,
+        deadline,
+        amountIn: quote.amountIn,
+        amountOutMinimum: amountOutMin,
+      });
+    } else {
+      // Pack multi-hop CLMM path: tokenIn (address) + fee (uint24) + tokenOut (address) ...
+      const types: string[] = ['address'];
+      const values: any[] = [firstRoute.hops[0]!.tokenIn.address as `0x${string}`];
+
+      for (const hop of firstRoute.hops) {
+        types.push('uint24');
+        types.push('address');
+        values.push(hop.feeTier);
+        values.push(hop.tokenOut.address as `0x${string}`);
+      }
+
+      const path = encodePacked(types as any, values);
+      callData = encodeFunctionData({
+        abi: CLMM_SWAP_ROUTER_ABI,
+        functionName: 'exactInput',
+        args: [
+          {
+            path,
+            recipient,
+            deadline,
+            amountIn: quote.amountIn,
+            amountOutMinimum: amountOutMin,
+          },
+        ],
+      });
+    }
   }
 
   return {
@@ -158,22 +187,39 @@ export async function simulateEvmCall(
       transport: http(rpcUrl),
     });
 
-    const callResult = await client.call({
-      account: from,
-      to: intent.to as `0x${string}`,
-      data: intent.data as Hex,
-      value: intent.value ? BigInt(intent.value) : 0n,
-    });
+    const [callResult, gasEstimate] = await Promise.all([
+      client.call({
+        account: from,
+        to: intent.to as `0x${string}`,
+        data: intent.data as Hex,
+        value: intent.value ? BigInt(intent.value) : 0n,
+      }),
+      client
+        .estimateGas({
+          account: from,
+          to: intent.to as `0x${string}`,
+          data: intent.data as Hex,
+          value: intent.value ? BigInt(intent.value) : 0n,
+        })
+        .catch(() => intent.estimatedGas ?? 150_000n),
+    ]);
 
     return {
       success: true,
-      gasUsed: intent.estimatedGas ?? 150_000n,
+      gasUsed: gasEstimate,
       returnedData: callResult.data,
     };
   } catch (err: any) {
+    const reason =
+      err?.shortMessage ||
+      err?.reason ||
+      err?.details ||
+      err?.message ||
+      'EVM call simulation reverted';
     return {
       success: false,
-      error: err.message ?? 'EVM call simulation failed',
+      error: reason,
+      returnedData: err?.data,
     };
   }
 }

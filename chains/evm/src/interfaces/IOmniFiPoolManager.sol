@@ -63,6 +63,7 @@ interface IOmniFiPoolManager {
     error PoolIsPaused();
     error AlreadyUnlocked();
     error NotUnlocked();
+    error NotActiveLocker();
     error CurrencyDeltaNotZero(Currency currency, int256 delta);
     error InsufficientCredit();
     error NoExcessDebt();

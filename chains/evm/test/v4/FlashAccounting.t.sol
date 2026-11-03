@@ -4,6 +4,7 @@ pragma solidity 0.8.26;
 import { Test } from "forge-std/Test.sol";
 import { OmniFiPoolManager } from "../../src/v4-core/OmniFiPoolManager.sol";
 import { IOmniFiPoolManager } from "../../src/interfaces/IOmniFiPoolManager.sol";
+import { IUnlockCallback } from "../../src/interfaces/IUnlockCallback.sol";
 import { Currency, CurrencyLibrary } from "../../src/v4-core/types/Currency.sol";
 import { PoolKey } from "../../src/v4-core/types/PoolKey.sol";
 import { PoolId, PoolIdLibrary } from "../../src/v4-core/types/PoolId.sol";
@@ -203,5 +204,58 @@ contract FlashAccountingTest is Test {
         uint256 routerEthAfter = address(router).balance;
         // Router ETH balance decreased by exactly the deposit
         assertTrue(routerEthBefore > routerEthAfter);
+    }
+
+    function test_revertIfThirdPartyCallsDuringUnlock() external {
+        MaliciousUnlocker unlocker = new MaliciousUnlocker(address(manager), key);
+        bool caught = unlocker.executeUnlock();
+        assertTrue(caught, "Third party call during unlock must revert with NotActiveLocker");
+    }
+}
+
+contract MaliciousUnlocker is IUnlockCallback {
+    OmniFiPoolManager manager;
+    PoolKey key;
+
+    constructor(address _manager, PoolKey memory _key) {
+        manager = OmniFiPoolManager(payable(_manager));
+        key = _key;
+    }
+
+    function executeUnlock() external returns (bool) {
+        bytes memory result = manager.unlock("");
+        return abi.decode(result, (bool));
+    }
+
+    function unlockCallback(bytes calldata) external override returns (bytes memory) {
+        ThirdPartyCaller thirdParty = new ThirdPartyCaller(address(manager), key);
+        bool caught = false;
+        try thirdParty.doSwap() {
+            caught = false;
+        } catch {
+            caught = true;
+        }
+        return abi.encode(caught);
+    }
+}
+
+contract ThirdPartyCaller {
+    OmniFiPoolManager manager;
+    PoolKey key;
+
+    constructor(address _manager, PoolKey memory _key) {
+        manager = OmniFiPoolManager(payable(_manager));
+        key = _key;
+    }
+
+    function doSwap() external {
+        manager.swap(
+            key,
+            IOmniFiPoolManager.SwapParams({
+                zeroForOne: true,
+                amountSpecified: 100 ether,
+                sqrtPriceLimitX96: TickMath.MIN_SQRT_PRICE + 1
+            })
+        );
     }
 }

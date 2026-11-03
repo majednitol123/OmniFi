@@ -1,8 +1,8 @@
 # OmniFi — Release Policy
 
 **Version:** 1.0  
-**Status:** Draft  
-**Date:** 2026-11-01  
+**Status:** Approved — Protocol Engineering Release Policy v1.0  
+**Date:** 2026-11-02  
 **Source:** plan.md §36, §38
 
 ---

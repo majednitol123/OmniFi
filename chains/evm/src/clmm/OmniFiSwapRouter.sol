@@ -8,16 +8,21 @@ import { IOmniFiPool } from "../interfaces/IOmniFiPool.sol";
 import { Path } from "./libraries/Path.sol";
 import { TickMath } from "./libraries/TickMath.sol";
 import { TransferHelper } from "../v2/libraries/TransferHelper.sol";
+import { IERC20Minimal } from "../interfaces/IERC20Minimal.sol";
+import { Multicall } from "../periphery/Multicall.sol";
 
 /// @title OmniFi CLMM Swap Router
 /// @notice Executes single-hop and multi-hop token swaps across OmniFi CLMM pools
-contract OmniFiSwapRouter is IOmniFiSwapRouter, IOmniFiSwapCallback {
+contract OmniFiSwapRouter is IOmniFiSwapRouter, IOmniFiSwapCallback, Multicall {
     using Path for bytes;
 
     error TransactionTooOld();
     error SlippageExceeded();
     error PoolDoesNotExist();
     error InvalidCallbackCaller();
+    error NativeEtherNotAccepted();
+    error InvalidSwapDeltas();
+    error OnlyFactoryOwner();
 
     address public immutable factory;
     uint256 private amountInCached;
@@ -41,7 +46,7 @@ contract OmniFiSwapRouter is IOmniFiSwapRouter, IOmniFiSwapCallback {
         external
         override
     {
-        require(amount0Delta > 0 || amount1Delta > 0);
+        if (amount0Delta <= 0 && amount1Delta <= 0) revert InvalidSwapDeltas();
         SwapCallbackData memory decoded = abi.decode(data, (SwapCallbackData));
         (address tokenIn, address tokenOut, uint24 fee) = decoded.path.decodeFirstPool();
 
@@ -77,6 +82,7 @@ contract OmniFiSwapRouter is IOmniFiSwapRouter, IOmniFiSwapCallback {
         checkDeadline(params.deadline)
         returns (uint256 amountOut)
     {
+        if (msg.value > 0) revert NativeEtherNotAccepted();
         amountOut = _exactInputInternal(
             params.amountIn,
             params.recipient,
@@ -97,6 +103,7 @@ contract OmniFiSwapRouter is IOmniFiSwapRouter, IOmniFiSwapCallback {
         checkDeadline(params.deadline)
         returns (uint256 amountOut)
     {
+        if (msg.value > 0) revert NativeEtherNotAccepted();
         address payer = msg.sender;
         bytes memory path = params.path;
         uint256 amountIn = params.amountIn;
@@ -154,6 +161,7 @@ contract OmniFiSwapRouter is IOmniFiSwapRouter, IOmniFiSwapCallback {
         checkDeadline(params.deadline)
         returns (uint256 amountIn)
     {
+        if (msg.value > 0) revert NativeEtherNotAccepted();
         _exactOutputInternal(
             params.amountOut,
             params.recipient,
@@ -176,6 +184,7 @@ contract OmniFiSwapRouter is IOmniFiSwapRouter, IOmniFiSwapCallback {
         checkDeadline(params.deadline)
         returns (uint256 amountIn)
     {
+        if (msg.value > 0) revert NativeEtherNotAccepted();
         // For exact output, path is tokenOut -> fee -> ... -> tokenIn
         _exactOutputInternal(
             params.amountOut,
@@ -210,5 +219,22 @@ contract OmniFiSwapRouter is IOmniFiSwapRouter, IOmniFiSwapCallback {
             .swap(recipient, zeroForOne, -int256(amountOut), sqrtPriceLimitX96, abi.encode(data));
 
         amountIn = uint256(zeroForOne ? amount0 : amount1);
+    }
+
+    /// @notice Sweeps accidentally stuck tokens to a recipient
+    function sweepToken(address token, uint256 amountMinimum, address recipient) external {
+        if (msg.sender != IOmniFiPoolFactory(factory).owner()) revert OnlyFactoryOwner();
+        uint256 balance = IERC20Minimal(token).balanceOf(address(this));
+        if (balance < amountMinimum) revert SlippageExceeded();
+        TransferHelper.safeTransfer(token, recipient, balance);
+    }
+
+    /// @notice Sweeps accidentally stuck native ETH to a recipient
+    function refundETH(address recipient) external {
+        if (msg.sender != IOmniFiPoolFactory(factory).owner()) revert OnlyFactoryOwner();
+        uint256 balance = address(this).balance;
+        if (balance > 0) {
+            TransferHelper.safeTransferETH(recipient, balance);
+        }
     }
 }

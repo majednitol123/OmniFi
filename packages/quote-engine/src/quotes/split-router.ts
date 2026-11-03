@@ -15,6 +15,19 @@ export interface SplitRouterOptions {
   ttlMs?: number;
 }
 
+export function formatExecutionPrice(
+  amountOut: bigint,
+  amountIn: bigint,
+  scaleDecimals: number = 6,
+): string {
+  if (amountIn === 0n) return '0.' + '0'.repeat(scaleDecimals);
+  const scale = 10n ** BigInt(scaleDecimals);
+  const scaled = (amountOut * scale) / amountIn;
+  const intPart = scaled / scale;
+  const fracPart = (scaled % scale).toString().padStart(scaleDecimals, '0');
+  return `${intPart}.${fracPart}`;
+}
+
 export function findBestQuote(
   candidatePaths: RouteHop[][],
   tokenIn: AssetRef,
@@ -58,7 +71,7 @@ export function findBestQuote(
       tokenOut,
       amountIn,
       amountOut: bestRoute.amountOut,
-      executionPrice: (Number(bestRoute.amountOut) / Number(amountIn)).toFixed(6),
+      executionPrice: formatExecutionPrice(bestRoute.amountOut, amountIn),
       priceImpact: bestRoute.priceImpact,
       routes: [bestRoute],
       splits: [{ routeIndex: 0, percentage: 100, amountIn, amountOut: bestRoute.amountOut }],
@@ -152,13 +165,13 @@ export function findBestQuote(
     });
   }
 
-  // Calculate composite price impact
-  let totalBpsWeighted = 0;
+  // Calculate composite price impact using exact weighted BigInt math
+  let totalWeightedBps = 0n;
   for (const r of selectedRoutes) {
-    const weight = Number(r.amountIn) / Number(amountIn);
-    totalBpsWeighted += r.priceImpact.bps * weight;
+    totalWeightedBps += BigInt(r.priceImpact.bps) * r.amountIn;
   }
-  const compositePriceImpact = createPriceImpact(Math.round(totalBpsWeighted));
+  const compositeBps = amountIn > 0n ? Number(totalWeightedBps / amountIn) : 0;
+  const compositePriceImpact = createPriceImpact(compositeBps);
 
   return {
     quoteId: `quote-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`,
@@ -168,7 +181,7 @@ export function findBestQuote(
     tokenOut,
     amountIn,
     amountOut: bestSplitConfig.totalAmountOut,
-    executionPrice: (Number(bestSplitConfig.totalAmountOut) / Number(amountIn)).toFixed(6),
+    executionPrice: formatExecutionPrice(bestSplitConfig.totalAmountOut, amountIn),
     priceImpact: compositePriceImpact,
     routes: selectedRoutes,
     splits: selectedSplits,

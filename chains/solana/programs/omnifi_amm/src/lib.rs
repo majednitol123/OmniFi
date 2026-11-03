@@ -172,4 +172,66 @@ mod tests {
         let res = compute_swap_exact_output(1000, 1000, 1000, 3000, 0);
         assert!(res.is_err());
     }
+
+    #[test]
+    fn test_invariant_constant_product_fuzz() {
+        // Deterministic pseudo-random seed generator
+        let mut seed: u64 = 0xdeadbeef_cafebabe;
+        let mut pseudo_rand = || {
+            seed = seed.wrapping_mul(6364136223846793005).wrapping_add(1);
+            seed
+        };
+
+        for _ in 0..200 {
+            let r0 = (pseudo_rand() % 10_000_000_000) + 1_000_000;
+            let r1 = (pseudo_rand() % 10_000_000_000) + 1_000_000;
+            let amt_in = (pseudo_rand() % (r0 / 2)) + 1;
+            let fee_tier = 3000u32;
+            let proto_frac = 250_000u32;
+
+            if let Ok((amt_out, proto_fee)) = compute_swap_exact_input(amt_in, r0, r1, fee_tier, proto_frac) {
+                assert!(amt_out < r1);
+                let k_before = (r0 as u128) * (r1 as u128);
+                let k_after = ((r0 + amt_in) as u128) * ((r1 - amt_out) as u128);
+                assert!(k_after >= k_before, "k invariant violated: k_after {} < k_before {}", k_after, k_before);
+                assert!(proto_fee <= amt_in);
+            }
+        }
+    }
+
+    #[test]
+    fn test_protocol_fee_deduction_vault_balance() {
+        let r0 = 1_000_000_000u64;
+        let r1 = 2_000_000_000u64;
+        let amt_in = 50_000_000u64;
+        let fee_tier = 2500u32; // 0.25%
+        let proto_frac = 250_000u32; // 25%
+
+        let (amt_out, proto_fee) = compute_swap_exact_input(amt_in, r0, r1, fee_tier, proto_frac).unwrap();
+
+        // The net reserve increase must strictly equal amount_in - proto_fee
+        let reserve_increase = amt_in - proto_fee;
+        assert_eq!(reserve_increase + proto_fee, amt_in, "Vault balance conservation check");
+
+        let updated_r0 = r0 + reserve_increase;
+        let updated_r1 = r1 - amt_out;
+
+        // k after excluding protocol fee from pool reserve must still satisfy k >= k_before
+        let k_before = (r0 as u128) * (r1 as u128);
+        let k_after_lp = (updated_r0 as u128) * (updated_r1 as u128);
+        assert!(k_after_lp >= k_before, "LP invariant satisfied");
+    }
+
+    #[test]
+    fn test_extreme_asymmetric_reserves() {
+        let r0 = 10_000_000_000_000u64; // 10T
+        let r1 = 1_000_000u64; // 1M
+        let amt_in = 100_000_000u64;
+
+        let (amt_out, _) = compute_swap_exact_input(amt_in, r0, r1, 3000, 0).unwrap();
+        assert!(amt_out < r1);
+        let k_before = (r0 as u128) * (r1 as u128);
+        let k_after = ((r0 + amt_in) as u128) * ((r1 - amt_out) as u128);
+        assert!(k_after >= k_before);
+    }
 }

@@ -19,7 +19,16 @@
     "clean": "turbo run clean && rm -rf node_modules",
     "test:evm": "cd chains/evm && forge test",
     "test:solana": "cd chains/solana && cargo test",
-    "test:all": "pnpm test && pnpm test:evm && pnpm test:solana"
+    "test:all": "pnpm test && pnpm test:evm && pnpm test:solana",
+    "security:secrets": "gitleaks detect --config .gitleaks.toml --verbose --no-git",
+    "security:evm": "cd chains/evm && forge test && aderyn .",
+    "security:slither": "cd chains/evm && (slither . --config-file slither.config.json --json slither-report.json || test -s slither-report.json)",
+    "security:solana": "cd chains/solana && cargo test && cargo audit && cargo deny check",
+    "security:deps": "node scripts/security-audit-deps.mjs",
+    "security:infra": "trivy fs --config trivy.yaml .",
+    "security:invariants": "cd chains/evm && forge test --match-test \"invariant_\" --evm-version cancun",
+    "security:regression": "cd chains/evm && forge test --match-path test/security/SecurityRegression.t.sol --evm-version cancun",
+    "security:all": "pnpm security:secrets && pnpm security:deps && pnpm security:evm && pnpm security:slither && pnpm security:solana && pnpm security:infra && pnpm security:invariants && pnpm security:regression"
   },
   "devDependencies": {
     "eslint": "^8.57.1",

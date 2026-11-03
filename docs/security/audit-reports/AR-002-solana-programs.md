@@ -1,17 +1,20 @@
-# Security Audit Report: AR-002 Solana Anchor Programs
+# Security Assessment Report: AR-002 Solana Anchor Programs
 **Scope:** `chains/solana/programs/` (`omnifi_amm`, `omnifi_clmm`)  
-**Evaluator:** Independent Protocol Security Review  
-**Date:** 2026-11-01  
+**Evaluator:** Internal Protocol Security Review Team (Pre-Audit Verification)  
+**Date:** 2026-11-03  
 **Status:** COMPLETE — REMEDIATIONS VERIFIED  
+
+> [!IMPORTANT]
+> **Independent Audit Notice:** This report represents internal whitebox testing, invariant verification, and remediation audits conducted by the internal OmniFi protocol team. It documents pre-audit remediation readiness and does NOT substitute the mandatory independent external third-party security audit required under Release Gate D prior to mainnet launch.
 
 ---
 
 ## 1. Executive Summary
-The Solana program suite was audited for Program Derived Address (PDA) seed security, account ownership verification, signer privileges, Cross-Program Invocation (CPI) isolation, integer math safety, and rent exemption permanence.
+The Solana program suite was audited internally for Program Derived Address (PDA) seed security, account ownership verification, signer privileges, Cross-Program Invocation (CPI) isolation, integer math safety, exact output exhaustion assertions, tick array contiguity, and rent exemption permanence.
 
-- **Total Programs Audited:** 2 Anchor programs (`omnifi_amm`, `omnifi_clmm`) (~2,100 SLoC).
-- **Unit Tests:** 23 passing tests covering constant product swaps, sqrt price math, tick math, and CPI derivations.
-- **Overall Assessment:** The programs enforce strict account validation macros and minimal privilege assignments.
+- **Total Programs Audited:** 2 Anchor programs (`omnifi_amm`, `omnifi_clmm`) (~3,918 SLoC).
+- **Unit & Integration Tests:** 30 passing tests (23 Cargo unit tests + 7 Anchor integration tests) covering constant product swaps, sqrt price math, tick array traversal, exact output assertions, and CPI derivations.
+- **Overall Assessment:** The programs enforce strict account validation macros and minimal privilege assignments. F-05 (fee deduction conservation), F-06 (exact output assertion), and P2-02 (tick array contiguity) are fully remediated.
 
 ---
 

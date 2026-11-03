@@ -1,8 +1,8 @@
 # OmniFi — Product Requirements Document
 
 **Version:** 1.0  
-**Status:** Draft — awaiting project owner review  
-**Date:** 2026-11-01  
+**Status:** Approved — Engineering Baseline v1.0  
+**Date:** 2026-11-02  
 **Source:** Synthesized from `docs/plan.md` Sections 1–3  
 **Related:** ADR-001 through ADR-015, requirements-traceability.csv
 

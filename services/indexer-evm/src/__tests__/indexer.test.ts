@@ -1,7 +1,7 @@
 import { InMemoryDatabaseClient } from '@omnifi/database';
 import { encodeEventTopics, Hex, parseAbiItem } from 'viem';
 import { describe, expect, it } from 'vitest';
-import { CLMM_SWAP_ABI_ITEM, EvmEventDecoder, V2_SWAP_ABI_ITEM } from '../event-decoder';
+import { CLMM_SWAP_ABI_ITEM, EvmEventDecoder, V2_SWAP_ABI_ITEM, V2_SYNC_ABI_ITEM } from '../event-decoder';
 import { EvmScanner } from '../scanner';
 import { RawLog } from '../types';
 
@@ -137,6 +137,97 @@ describe('EVM Event Indexer & Reorg Recovery (Track P11-B)', () => {
     // Verify unfinalized events on orphaned chain were purged
     swaps = await db.listSwapsByPool(dummyPool.toLowerCase());
     expect(swaps.length).toBe(0); // All unfinalized events past ancestor were cleanly rolled back
+  });
+
+  it('processes V2 Sync events and updates pool reserves in database', async () => {
+    const db = new InMemoryDatabaseClient();
+    const networkId = 'eip155:1';
+
+    await db.insertNetwork({
+      networkId,
+      name: 'Ethereum Mainnet',
+      namespace: 'eip155',
+      chainRef: '1',
+      nativeAssetSymbol: 'ETH',
+      nativeAssetDecimals: 18,
+      status: 'active',
+      createdAt: new Date(),
+    });
+
+    await db.insertToken({
+      tokenId: 'token0',
+      networkId,
+      address: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+      symbol: 'USDC',
+      name: 'USD Coin',
+      decimals: 6,
+      riskTier: 'LOW',
+      createdAt: new Date(),
+    });
+
+    await db.insertToken({
+      tokenId: 'token1',
+      networkId,
+      address: '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+      symbol: 'WETH',
+      name: 'Wrapped Ether',
+      decimals: 18,
+      riskTier: 'LOW',
+      createdAt: new Date(),
+    });
+
+    const poolId = dummyPool.toLowerCase();
+    await db.insertPool({
+      poolId,
+      networkId,
+      protocol: 'v2',
+      token0Id: 'token0',
+      token1Id: 'token1',
+      feeTier: 3000,
+      reserve0: 10_000_000_000n,
+      reserve1: 5_000_000_000_000_000_000n,
+      isPaused: false,
+      createdAt: new Date(),
+    });
+
+    const scanner = new EvmScanner(
+      {
+        networkId,
+        chainId: 1,
+        rpcUrl: 'http://127.0.0.1:8545',
+      },
+      db,
+    );
+
+    // Sync(uint112 reserve0, uint112 reserve1)
+    const syncTopics = [
+      '0x1c411e9a96e071241c2f21f7726b17ae89e3cab4c78be50e062b03a9fffbbad1',
+    ] as Hex[];
+
+    // Encode reserves: reserve0 = 20_000_000_000, reserve1 = 10_000_000_000_000_000_000
+    const syncData =
+      '0x' +
+      '00000000000000000000000000000000000000000000000000000004a817c800' + // 20000000000
+      '0000000000000000000000000000000000000000000000008ac7230489e80000'; // 10000000000000000000
+
+    const syncLog: RawLog = {
+      address: dummyPool,
+      topics: syncTopics,
+      data: syncData as Hex,
+      blockNumber: 150n,
+      blockHash: '0xhash150' as Hex,
+      transactionHash: '0xtx150' as Hex,
+      logIndex: 1,
+    };
+
+    const processed = await scanner.processLogs([syncLog], 150n);
+    expect(processed).toBe(1);
+
+    // Verify pool reserves updated
+    const updatedPool = await db.getPool(poolId);
+    expect(updatedPool).toBeDefined();
+    expect(updatedPool?.reserve0).toBe(20_000_000_000n);
+    expect(updatedPool?.reserve1).toBe(10_000_000_000_000_000_000n);
   });
 });
 

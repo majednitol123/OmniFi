@@ -23,7 +23,13 @@ export function registerPoolsRoutes(fastify: FastifyInstance, graph: PoolGraph):
         pools = pools.filter((p) => `${p.namespace}:${p.chainRef}`.toLowerCase() === networkId.toLowerCase());
       }
       if (protocol) {
-        pools = pools.filter((p) => p.poolType.toLowerCase() === protocol.toLowerCase());
+        const protoLower = protocol.toLowerCase();
+        pools = pools.filter(
+          (p) =>
+            p.poolType.toLowerCase() === protoLower ||
+            (protoLower === 'amm' && p.poolType.toLowerCase().includes('amm')) ||
+            (protoLower === 'clmm' && p.poolType.toLowerCase().includes('clmm')),
+        );
       }
       if (token) {
         const lowerToken = token.toLowerCase();

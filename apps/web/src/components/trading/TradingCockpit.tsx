@@ -83,7 +83,9 @@ export function TradingCockpit() {
     } catch (err: any) {
       setQuote(null);
       const raw = err?.userMessage || err?.message || '';
-      if (raw.includes('Route GET:') || raw.includes('Route POST:') || raw.includes('404') || raw === 'API request failed') {
+      if (raw.includes('ECONNREFUSED') || raw.includes('Network error') || raw.includes('Failed to fetch') || raw.includes('fetch failed') || raw.includes('Failed to load') || raw === 'API request failed') {
+        setQuoteError('Quote pricing daemon is currently reconnecting. If running locally, verify quote-api on port 3001.');
+      } else if (raw.includes('Route GET:') || raw.includes('Route POST:') || raw.includes('404') || raw.includes('No Liquidity Route Found') || raw.includes('Insufficient Liquidity')) {
         setQuoteError('No direct liquidity route found for this amount. Try adjusting the size or asset.');
       } else {
         setQuoteError(raw || 'No liquidity route available for this pair');

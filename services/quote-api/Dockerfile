@@ -15,4 +15,5 @@ ENV PORT=3001
 ENV HOST=0.0.0.0
 
 EXPOSE 3001
+USER node
 CMD ["node", "services/quote-api/dist/server.js"]

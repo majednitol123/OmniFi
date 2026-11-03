@@ -26,6 +26,17 @@ export function WalletModal() {
     setMounted(true);
   }, []);
 
+  useEffect(() => {
+    if (!isWalletModalOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsWalletModalOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isWalletModalOpen, setIsWalletModalOpen]);
+
   const shorten = (addr: string) => `${addr.slice(0, 6)}...${addr.slice(-4)}`;
 
   const handleCopyAddress = () => {
@@ -52,22 +63,25 @@ export function WalletModal() {
   const modalContent = isWalletModalOpen && mounted ? (
     <div
       className="modal-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Connect Wallet Dialog"
       onClick={() => setIsWalletModalOpen(false)}
       style={{
         position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
+        inset: 0,
         width: '100vw',
         height: '100vh',
-        background: 'rgba(4, 6, 9, 0.82)',
+        background: 'rgba(4, 6, 9, 0.85)',
         backdropFilter: 'blur(8px)',
         display: 'flex',
+        flexDirection: 'column',
         alignItems: 'center',
-        justifyContent: 'center',
+        justifyContent: 'flex-start',
         zIndex: 99999,
-        padding: '1.5rem',
+        padding: '2.5rem 1rem 2rem',
+        overflowY: 'auto',
+        boxSizing: 'border-box',
       }}
     >
       <div
@@ -77,11 +91,17 @@ export function WalletModal() {
           border: '1px solid var(--border-default)',
           borderRadius: '16px',
           boxShadow: 'var(--shadow-modal)',
-          padding: '1.75rem',
+          padding: '1.5rem',
           width: '100%',
           maxWidth: '460px',
-          margin: 'auto',
+          maxHeight: 'min(88vh, 580px)',
+          overflowY: 'auto',
+          marginTop: 'auto',
+          marginBottom: 'auto',
+          marginLeft: 'auto',
+          marginRight: 'auto',
           position: 'relative',
+          boxSizing: 'border-box',
         }}
         onClick={(e) => e.stopPropagation()}
       >

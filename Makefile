@@ -65,3 +65,34 @@ clean:
 hash-artifacts:
 	./scripts/hash-artifacts.sh
 
+# Security tooling commands (Phase 3)
+security-secrets:
+	gitleaks detect --config .gitleaks.toml --verbose --no-git
+
+security-evm:
+	cd chains/evm && forge test
+	cd chains/evm && aderyn .
+
+security-slither:
+	cd chains/evm && (slither . --config-file slither.config.json --json slither-report.json || test -s slither-report.json)
+
+security-solana:
+	cd chains/solana && cargo test
+	cd chains/solana && cargo audit
+	cd chains/solana && cargo deny check
+
+security-deps:
+	node scripts/security-audit-deps.mjs
+
+security-infra:
+	trivy fs --config trivy.yaml --scanners misconfig,secret .
+
+security-invariants:
+	cd chains/evm && forge test --match-test "invariant_" --evm-version cancun
+
+security-regression:
+	cd chains/evm && forge test --match-path test/security/SecurityRegression.t.sol --evm-version cancun
+
+security-all: security-secrets security-deps security-evm security-slither security-solana security-infra security-invariants security-regression
+
+

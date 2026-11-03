@@ -68,6 +68,29 @@ export class SolanaScanner {
             createdAt: new Date(),
           });
           processed++;
+
+          // Synchronize Pool State in Database
+          if (event.type === 'CLMM_SWAP' && event.sqrtPriceAfterX64 !== undefined) {
+            await this.db.updatePoolState(event.poolAddress, {
+              sqrtPriceX64: event.sqrtPriceAfterX64,
+              currentTick: event.tickAfter,
+            });
+          } else if (event.type === 'AMM_SWAP') {
+            const pool = await this.db.getPool(event.poolAddress);
+            if (pool && pool.reserve0 !== undefined && pool.reserve1 !== undefined) {
+              const reserve0 = event.zeroForOne
+                ? pool.reserve0 + amount0In
+                : pool.reserve0 >= amount0Out
+                  ? pool.reserve0 - amount0Out
+                  : 0n;
+              const reserve1 = event.zeroForOne
+                ? pool.reserve1 >= amount1Out
+                  ? pool.reserve1 - amount1Out
+                  : 0n
+                : pool.reserve1 + amount1In;
+              await this.db.updatePoolState(event.poolAddress, { reserve0, reserve1 });
+            }
+          }
         } else if (event.type === 'CLMM_POSITION_UPDATE') {
           await this.db.upsertPosition({
             positionId: `${this.config.networkId}:${event.positionAddress}`,
@@ -103,4 +126,3 @@ export class SolanaScanner {
     return processed;
   }
 }
-

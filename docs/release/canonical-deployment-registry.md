@@ -1,8 +1,11 @@
 # OmniFi Protocol — Canonical Deployment Registry
-**Document Version:** 1.0.0  
-**Effective Release:** Release 1.0.0 (Mainnet)  
-**Status:** CANONICAL & VERIFIED  
-**Date:** 2026-11-01  
+**Document Version:** 1.1.0  
+**Effective Release:** Release 1.0.0 (Pre-Production Testnet Staging)  
+**Status:** STAGING / PRE-PRODUCTION VERIFIED  
+**Date:** 2026-11-03  
+
+> [!NOTE]
+> **Pre-Production Staging Registry:** The addresses and parameters listed below represent the pre-production testnet staging deployment configuration across Ethereum Sepolia, Base Sepolia, and Solana Devnet. Mainnet production deployment addresses will be finalized following completion of the independent external security audit under Release Gate D.
 
 ---
 
@@ -10,7 +13,7 @@
 
 This registry is the authoritative directory of all canonical smart contract addresses, program IDs, token vaults, and governance multisigs for the OmniFi Decentralized Exchange. 
 
-All protocol frontend clients (`apps/web`), backend routing services (`services/quote-api`), indexers (`services/evm-indexer`, `services/solana-indexer`), and developer SDKs (`@omnifi/sdk-evm`, `@omnifi/sdk-solana`, `@omnifi/sdk-unified`) must reference these exact addresses for mainnet production transactions.
+All protocol frontend clients (`apps/web`), backend routing services (`services/quote-api`), indexers (`services/indexer-evm`, `services/indexer-solana`), and developer SDKs (`@omnifi/sdk-evm`, `@omnifi/sdk-solana`, `@omnifi/sdk-unified`) reference these exact addresses for pre-production testnet transactions.
 
 ---
 

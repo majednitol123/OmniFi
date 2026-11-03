@@ -2,6 +2,8 @@
 pragma solidity 0.8.26;
 
 import { ERC721 } from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
+import { Base64 } from "@openzeppelin/contracts/utils/Base64.sol";
 import { IOmniFiPositionManager } from "../interfaces/IOmniFiPositionManager.sol";
 import { IOmniFiMintCallback } from "../interfaces/IOmniFiMintCallback.sol";
 import { IOmniFiPoolFactory } from "../interfaces/IOmniFiPoolFactory.sol";
@@ -10,16 +12,19 @@ import { LiquidityAmounts } from "./libraries/LiquidityAmounts.sol";
 import { TickMath } from "./libraries/TickMath.sol";
 import { FullMath } from "./libraries/FullMath.sol";
 import { FixedPoint128 } from "./libraries/FixedPoint128.sol";
+import { SafeCast } from "./libraries/SafeCast.sol";
 import { TransferHelper } from "../v2/libraries/TransferHelper.sol";
+import { Multicall } from "../periphery/Multicall.sol";
 
 /// @title OmniFi Concentrated Liquidity Position Manager
 /// @notice Wraps CLMM positions into transferable ERC-721 non-fungible tokens
-contract OmniFiPositionManager is ERC721, IOmniFiPositionManager, IOmniFiMintCallback {
+contract OmniFiPositionManager is ERC721, IOmniFiPositionManager, IOmniFiMintCallback, Multicall {
     error TransactionTooOld();
     error NotAuthorized();
     error PoolDoesNotExist();
     error PriceSlippage();
     error ZeroLiquidity();
+    error InsufficientLiquidity();
     error CallbackCallerNotPool();
     error PositionNotEmpty();
 
@@ -213,7 +218,7 @@ contract OmniFiPositionManager is ERC721, IOmniFiPositionManager, IOmniFiMintCal
         returns (uint256 amount0, uint256 amount1)
     {
         Position storage pos = _positions[params.tokenId];
-        require(pos.liquidity >= params.liquidity);
+        if (pos.liquidity < params.liquidity) revert InsufficientLiquidity();
 
         address pool = IOmniFiPoolFactory(factory).getPool(pos.token0, pos.token1, pos.fee);
 
@@ -291,8 +296,8 @@ contract OmniFiPositionManager is ERC721, IOmniFiPositionManager, IOmniFiMintCal
         (amount0, amount1) = IOmniFiPool(pool)
             .collect(params.recipient, pos.tickLower, pos.tickUpper, amount0Collect, amount1Collect);
 
-        pos.tokensOwed0 -= uint128(amount0);
-        pos.tokensOwed1 -= uint128(amount1);
+        pos.tokensOwed0 -= SafeCast.toUint128(amount0);
+        pos.tokensOwed1 -= SafeCast.toUint128(amount1);
 
         emit Collect(params.tokenId, params.recipient, amount0, amount1);
     }
@@ -306,5 +311,32 @@ contract OmniFiPositionManager is ERC721, IOmniFiPositionManager, IOmniFiMintCal
 
         _burn(tokenId);
         delete _positions[tokenId];
+    }
+
+    /// @notice Returns standard dynamic on-chain metadata URI for the position NFT
+    function tokenURI(uint256 tokenId) public view override returns (string memory) {
+        _requireOwned(tokenId);
+        Position memory pos = _positions[tokenId];
+
+        string memory json = Base64.encode(
+            bytes(
+                string.concat(
+                    '{"name":"OmniFi CLMM Position #',
+                    Strings.toString(tokenId),
+                    '","description":"OmniFi Concentrated Liquidity Position NFT representing pooled assets in range.',
+                    '","attributes":[{"trait_type":"Fee Tier","value":"',
+                    Strings.toString(pos.fee),
+                    '"},{"trait_type":"Tick Lower","value":"',
+                    Strings.toStringSigned(int256(pos.tickLower)),
+                    '"},{"trait_type":"Tick Upper","value":"',
+                    Strings.toStringSigned(int256(pos.tickUpper)),
+                    '"},{"trait_type":"Liquidity","value":"',
+                    Strings.toString(pos.liquidity),
+                    '"}]}'
+                )
+            )
+        );
+
+        return string.concat("data:application/json;base64,", json);
     }
 }

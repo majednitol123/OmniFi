@@ -296,4 +296,58 @@ contract OmniFiPositionManagerTest is Test {
             })
         );
     }
+
+    function test_TokenURI_Success() public {
+        vm.prank(alice);
+        (uint256 tokenId,,,) = positionManager.mint(
+            IOmniFiPositionManager.MintParams({
+                token0: address(token0),
+                token1: address(token1),
+                fee: 3000,
+                tickLower: -60,
+                tickUpper: 60,
+                amount0Desired: 1 ether,
+                amount1Desired: 1 ether,
+                amount0Min: 0,
+                amount1Min: 0,
+                recipient: alice,
+                deadline: block.timestamp + 1000
+            })
+        );
+
+        string memory uri = positionManager.tokenURI(tokenId);
+        assertGt(bytes(uri).length, 50);
+        assertTrue(bytes(uri)[0] == 'd' && bytes(uri)[1] == 'a' && bytes(uri)[2] == 't');
+    }
+
+    function test_DecreaseLiquidity_InsufficientLiquidity_Reverts() public {
+        vm.prank(alice);
+        (uint256 tokenId, uint128 liquidity,,) = positionManager.mint(
+            IOmniFiPositionManager.MintParams({
+                token0: address(token0),
+                token1: address(token1),
+                fee: 3000,
+                tickLower: -60,
+                tickUpper: 60,
+                amount0Desired: 1 ether,
+                amount1Desired: 1 ether,
+                amount0Min: 0,
+                amount1Min: 0,
+                recipient: alice,
+                deadline: block.timestamp + 1000
+            })
+        );
+
+        vm.expectRevert(OmniFiPositionManager.InsufficientLiquidity.selector);
+        vm.prank(alice);
+        positionManager.decreaseLiquidity(
+            IOmniFiPositionManager.DecreaseLiquidityParams({
+                tokenId: tokenId,
+                liquidity: liquidity + 1,
+                amount0Min: 0,
+                amount1Min: 0,
+                deadline: block.timestamp + 1000
+            })
+        );
+    }
 }

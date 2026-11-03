@@ -37,6 +37,7 @@ export const SimulateBodySchema = z.object({
     namespace: z.enum(['eip155', 'solana']),
     chainRef: z.string(),
     to: z.string(),
+    from: z.string().optional(),
     data: z.string().optional(),
     value: z.string().optional(),
     instructions: z

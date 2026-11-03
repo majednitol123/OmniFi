@@ -3,7 +3,7 @@ import rateLimit from '@fastify/rate-limit';
 import { PoolGraph } from '@omnifi/quote-engine';
 import Fastify, { FastifyInstance } from 'fastify';
 import { sendProblemDetails } from './errors/problem-details';
-import { createDefaultGraph } from './registry/default-pools';
+import { createDefaultGraph, loadGraphFromDatabase } from './registry/default-pools';
 import { registerQuoteRoutes } from './routes/quotes';
 import { registerRoutesDiscovery } from './routes/routes';
 import { registerSimulateRoutes } from './routes/simulate';
@@ -13,11 +13,14 @@ import { registerPoolsRoutes } from './routes/pools';
 import { registerPositionsRoutes } from './routes/positions';
 import { registerPrepareRoutes } from './routes/prepare';
 import { registerAnalyticsRoutes } from './routes/analytics';
+import { openApiSpec } from './openapi/spec';
 import { register, httpRequestDurationSeconds, httpRequestsTotal } from './metrics';
+import { OmniFiDatabaseClient, InMemoryDatabaseClient, PostgresDatabaseClient } from '@omnifi/database';
 
 export interface BuildServerOptions {
   graph?: PoolGraph;
   enableRateLimit?: boolean;
+  db?: OmniFiDatabaseClient;
 }
 
 export async function buildServer(options: BuildServerOptions = {}): Promise<FastifyInstance> {
@@ -84,15 +87,30 @@ export async function buildServer(options: BuildServerOptions = {}): Promise<Fas
     return register.metrics();
   });
 
-  const graph = options.graph ?? createDefaultGraph();
+  // OpenAPI 3.1.0 Specification endpoints
+  fastify.get('/openapi.json', async (request, reply) => {
+    reply.header('Content-Type', 'application/json');
+    return openApiSpec;
+  });
+  fastify.get('/api/v1/openapi.json', async (request, reply) => {
+    reply.header('Content-Type', 'application/json');
+    return openApiSpec;
+  });
+
+  const db =
+    options.db ??
+    (process.env.DATABASE_URL
+      ? new PostgresDatabaseClient(process.env.DATABASE_URL)
+      : new InMemoryDatabaseClient());
+  const graph = options.graph ?? (await loadGraphFromDatabase(db));
 
   // Register API routes
   registerNetworksRoutes(fastify);
   registerTokensRoutes(fastify);
   registerPoolsRoutes(fastify, graph);
-  registerPositionsRoutes(fastify, graph);
+  registerPositionsRoutes(fastify, graph, db);
   registerPrepareRoutes(fastify);
-  registerAnalyticsRoutes(fastify, graph);
+  registerAnalyticsRoutes(fastify, graph, db);
   registerQuoteRoutes(fastify, graph);
   registerRoutesDiscovery(fastify, graph);
   registerSimulateRoutes(fastify);

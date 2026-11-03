@@ -7,6 +7,7 @@ import { Currency } from "../types/Currency.sol";
 /// @notice Helper library for managing transient storage (EIP-1153) on Cancun EVM
 library TransientStorage {
     bytes32 internal constant LOCK_SLOT = keccak256("omnifi.poolmanager.lock");
+    bytes32 internal constant ACTIVE_LOCKER_SLOT = keccak256("omnifi.poolmanager.active_locker");
 
     function tstore(bytes32 slot, uint256 value) internal {
         assembly {
