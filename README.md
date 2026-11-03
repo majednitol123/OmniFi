@@ -42,8 +42,7 @@
   - [10.4 Makefile Developer Reference](#104-makefile-developer-reference)
 - [11. Quickstart, Docker Stack and Operational Runbook](#11-quickstart-docker-stack-and-operational-runbook)
 - [12. Architectural Decision Records (ADRs 001 - 015)](#12-architectural-decision-records-adrs-001---015)
-- [13. Candidate Alignment: Why OmniFi Matters for Uniswap Labs](#13-candidate-alignment-why-omnifi-matters-for-uniswap-labs)
-- [14. License and Attribution](#14-license-and-attribution)
+- [13. License and Attribution](#13-license-and-attribution)
 
 ---
 

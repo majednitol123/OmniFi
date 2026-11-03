@@ -17,7 +17,8 @@ services/ @omnifi/backend-team
 
 # CI / Infrastructure / Security
 .github/ @omnifi/security-team
-infra/ @omnifi/infra-team
+deployments/ @omnifi/infra-team
+scripts/ @omnifi/infra-team
 docs/security/ @omnifi/security-team
 .gitleaks.toml @omnifi/security-team
 
